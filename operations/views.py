@@ -339,6 +339,7 @@ class SolveMatrixAPIView(APIView):
                 result = solve_upper_banded_matrix(matrix, vector, m)
             elif matrix_type == LOWER_BANDED_MATRIX:
                 result = solve_lower_banded_matrix(matrix, vector, m)
+
             elif matrix_type == DENSE_SYMMETRIC_MATRIX and algorithm == GAUSS_ELIMINATOR_SYMMETRIC_DENSE_MATRIX:
                 result = solve_symmetric_desne_matrix_gauss_elimination(matrix, vector) 
             elif matrix_type == BANDED_SYMMETRIC_MATRIX and algorithm == GAUSS_ELIMINATOR_SYMMETRIC_BANDED_MATRIX:
@@ -346,15 +347,27 @@ class SolveMatrixAPIView(APIView):
             elif matrix_type == DENSE_SYMMETRIC_MATRIX and algorithm == GAUSS_JORDAN_SYMMETRIC_DENSE_MATRIX:
                 result = solve_symmetric_matrix_gauss_jordan(matrix, vector)
             elif matrix_type == BANDED_SYMMETRIC_MATRIX and algorithm == GAUSS_JORDAN_SYMMETRIC_BANDED_MATRIX:
-                result = solve_symmetric_matrix_gauss_jordan(matrix, vector) # Wrong one
+                result = solve_symmetric_banded_matrix_gauss_jordan(matrix, vector) 
+            elif matrix_type == DENSE_SYMMETRIC_MATRIX and algorithm == LU_DENSE_SYMMETRIC:
+                result = solve_symmetric_dense_matrix_LU(matrix, vector)
+            elif matrix_type == BANDED_SYMMETRIC_MATRIX and algorithm == LU_BANDED_SYMMETRIC:
+                result = solve_symmetric_banded_matrix_LU(matrix, vector, m)
+            
+            elif matrix_type == DENSE_MATRIX and algorithm == CHOLESKY_DENSE_MATRIX:
+                result = solve_cholesky_dense_matrix(matrix, vector)
+            elif matrix_type == BANDED_MATRIX and algorithm == CHOLESKY_BANDED_MATRIX:
+                result = solve_cholesky_banded_matrix(matrix, m)
 
-
-            elif algorithm == PIVOT_PARTIEL_GAUSS:
+            elif matrix_type == DENSE_MATRIX and algorithm == PIVOT_PARTIEL_GAUSS_DENSE:
                 result = solve_dense_matrix_pivot_partiel_gauss(matrix, vector)
-            elif algorithm == PIVOT_PARTIEL_GAUSS_BANDED:
+            elif matrix_type == BANDED_MATRIX and algorithm == PIVOT_PARTIEL_GAUSS_BANDED:
                 result = solve_banded_matrix_pivot_partial_gauss(matrix, vector, m)
-            elif algorithm == GAUSS_JORDAN:
-                pass
+            
+            elif algorithm == JACOBI:
+                result = solve_jacobi(matrix, vector, EPSILON)
+            elif algorithm == GAUSS_SEIDEL:
+                result = solve_gauss_seidel(matrix, vector, EPSILON)
+            
         except np.linalg.LinAlgError:
             raise SingularMatrixException({"message": "The matrix is singular and does not have an inverse."})
         

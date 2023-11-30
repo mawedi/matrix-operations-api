@@ -325,12 +325,12 @@ def solve_lower_banded_matrix(matrix, vector, m):
 
     # Calculation
     for i in range(vector_rows):
-        result[i][0] = vector[i]
+        result[i][0] = vector[i][0]
 
         for j in range(max(0, i - m), i):
             result[i][0] -= matrix[i][j] * result[j][0]
 
-        result[i][0] /= matrix[i][i]
+        result[i][0] = result[i][0] / matrix[i][i]
 
     return result
 
@@ -438,6 +438,117 @@ def solve_symmetric_matrix_gauss_jordan(matrix, vector):
     return result
 
 
+def solve_symmetric_banded_matrix_gauss_jordan(banded_matrix, vector, m):
+    matrix_rows = len(banded_matrix)
+
+    # Élimination de Gauss
+    for k in range(matrix_rows):
+        banded_matrix[k][k] = banded_matrix[k][k] ** 0.5  # Mise à jour de la diagonale principale
+        for i in range(k + 1, min(k + m, matrix_rows)):
+            banded_matrix[i][k] /= banded_matrix[k][k]  # Mise à jour de la colonne k
+            for j in range(k + 1, min(k + m, matrix_rows)):
+                banded_matrix[i][j] -= banded_matrix[i][k] * banded_matrix[j][k]  # Mise à jour de la partie supérieure
+
+    # Remise en forme de la matrice résultante
+    for i in range(matrix_rows):
+        for j in range(i + 1, matrix_rows):
+            banded_matrix[i][j] = 0.0
+
+    # Résolution du système linéaire résultant par substitution arrière
+    x = [[0.0] for _ in range(matrix_rows)]  # Initialize x as a column vector
+    for i in range(matrix_rows - 1, -1, -1):
+        x[i][0] = vector[i] / banded_matrix[i][i]
+        for j in range(i + 1, min(i + m, matrix_rows)):
+            x[i][0] -= banded_matrix[j][i] / banded_matrix[i][i] * x[j][0]
+
+    return x
+
+
+def lu_decomposition_dense(matrix):
+    matrix_rows = len(matrix)
+    
+    # Initialisation des matrices L et U
+    L = [[0.0] * matrix_rows for _ in range(matrix_rows)]
+    U = [[0.0] * matrix_rows for _ in range(matrix_rows)]
+
+    for i in range(matrix_rows):
+        # La diagonale de L est composée de 1
+        L[i][i] = 1.0
+
+        # Calcul de la matrice U
+        for j in range(i, matrix_rows):
+            sum_upper = sum(L[i][k] * U[k][j] for k in range(i))
+            U[i][j] = matrix[i][j] - sum_upper
+
+        # Calcul de la matrice L
+        for j in range(i+1, matrix_rows):
+            sum_lower = sum(L[j][k] * U[k][i] for k in range(i))
+            L[j][i] = (matrix[j][i] - sum_lower) / U[i][i]
+
+    return L, U
+
+def solve_symmetric_dense_matrix_LU(matrix, vector):
+    L, U = lu_decomposition_dense(matrix)
+    matrix_rows = len(L)
+
+    # Étape 1: Résoudre Ly = b pour y
+    y = [[0.0] for _ in range(matrix_rows)]  # Initialize y as a column vector
+    for i in range(matrix_rows):
+        y[i][0] = vector[i] - sum(L[i][k] * y[k][0] for k in range(i))
+
+    # Étape 2: Résoudre Ux = y pour x
+    result = [[0.0] for _ in range(matrix_rows)]  # Initialize x as a column vector
+    for i in range(matrix_rows-1, -1, -1):
+        result[i][0] = (y[i][0] - sum(U[i][k] * result[k][0] for k in range(i+1, matrix_rows))) / U[i][i]
+
+    return result
+
+
+def lu_decomposition_banded(matrix_band, bandwidth):
+    n = len(matrix_band)
+    
+    # Initialisation des matrices L et U
+    L = [[0.0] * n for _ in range(n)]
+    U = [[0.0] * n for _ in range(n)]
+
+    for i in range(n):
+        # La diagonale de L est composée de 1
+        L[i][i] = 1.0
+
+        # Calcul de la matrice U
+        for j in range(i, min(i + bandwidth, n)):
+            sum_upper = sum(L[i][k] * U[k][j] for k in range(i))
+            U[i][j] = matrix_band[i][j - i] - sum_upper
+
+        # Calcul de la matrice L
+        for j in range(i + 1, min(i + bandwidth, n)):
+            sum_lower = sum(L[j][k] * U[k][i] for k in range(i))
+            L[j][i] = (matrix_band[j][i - j] - sum_lower) / U[i][i]
+
+    return L, U
+
+
+def solve_symmetric_banded_matrix_LU(matrix, vector, bandwidth):
+    L, U = lu_decomposition_banded(matrix, bandwidth)
+    matrix_rows = len(L)
+
+    # Étape 1: Résoudre Ly = b pour y
+    y = [[0.0] for _ in range(matrix_rows)]  # Initialize y as a column vector
+    for i in range(matrix_rows):
+        for j in range(max(0, i - bandwidth + 1), i):
+            y[i][0] -= L[i][j] * y[j][0]
+        y[i][0] += vector[i]
+
+    # Étape 2: Résoudre Ux = y pour x
+    x = [[0.0] for _ in range(matrix_rows)]  # Initialize x as a column vector
+    for i in range(matrix_rows - 1, -1, -1):
+        for j in range(i + 1, min(i + bandwidth, matrix_rows)):
+            x[i][0] -= U[i][j] * x[j][0]
+        x[i][0] += y[i][0] / U[i][i]
+
+    return x
+
+
 def solve_dense_matrix_pivot_partiel_gauss(dense_matrix, vector):
     # Getting the rows, the columns and initialization of the vector
     rows_dense_matrix = len(dense_matrix)
@@ -500,3 +611,147 @@ def solve_banded_matrix_pivot_partial_gauss(banded_matrix, vector, m):
             used_matrix[j][-1] -= used_matrix[j][i] * vector_result[i][0]
 
     return vector_result
+
+
+def cholesky_decomposition_dense_matrix(matrix):
+    """
+    Factorisation de Cholesky : A = LLᵀ
+    """
+    n = len(matrix)
+    L = [[0.0] * n for _ in range(n)]
+
+    for i in range(n):
+        for j in range(i + 1):
+            if i == j:
+                # Élément diagonal
+                summation = sum(L[i][k] ** 2 for k in range(j))
+                L[i][j] = (matrix[i][j] - summation) ** 0.5
+            else:
+                # Éléments non diagonaux
+                summation = sum(L[i][k] * L[j][k] for k in range(j))
+                L[i][j] = (matrix[i][j] - summation) / L[j][j]
+
+    # Transposer la matrice L pour obtenir Lᵀ
+    LT = [[L[j][i] for j in range(n)] for i in range(n)]
+
+    return L, LT
+
+
+def solve_cholesky_dense_matrix(matrix, vector):
+    """
+    Résoudre le système linéaire Ax = b en utilisant la factorisation de Cholesky.
+    """
+    # Résoudre Ly = b en utilisant la substitution avant
+    L, LT = cholesky_decomposition_dense_matrix(matrix)
+    matrix_rows = len(L)
+
+    y = [[0.0] for _ in range(matrix_rows)]  # Initialize y as a column vector
+    for i in range(matrix_rows):
+        y[i][0] = (vector[i] - sum(L[i][k] * y[k][0] for k in range(i))) / L[i][i]
+
+    # Résoudre Lᵀx = y en utilisant la substitution arrière
+    result = [[0.0] for _ in range(matrix_rows)]  # Initialize x as a column vector
+    for i in range(matrix_rows - 1, -1, -1):
+        result[i][0] = (y[i][0] - sum(LT[i][k] * result[k][0] for k in range(i + 1, matrix_rows))) / LT[i][i]
+
+    return result
+
+
+def cholesky_decomposition_banded_matrix(banded_matrix, m):
+    """
+    Factorisation de Cholesky pour une matrice bande : A = LLᵀ
+    """
+    matrix_rows = len(banded_matrix)
+    L = [[0.0] * matrix_rows for _ in range(matrix_rows)]
+
+    for i in range(matrix_rows):
+        for j in range(max(0, i - m + 1), i + 1):
+            if i == j:
+                # Élément diagonal
+                summation = sum(L[i][k] ** 2 for k in range(max(0, j - m + 1), j))
+                L[i][j] = (banded_matrix[i][j] - summation) ** 0.5
+            else:
+                # Éléments non diagonaux
+                summation = sum(L[i][k] * L[j][k] for k in range(max(0, i - m + 1), min(j, i)))
+                L[i][j] = (banded_matrix[i][j] - summation) / L[j][j]
+
+    # Calculer la transposée de L (L^T)
+    LT = [[L[j][i] for j in range(matrix_rows)] for i in range(matrix_rows)]
+
+    return L, LT
+
+
+def solve_cholesky_banded_matrix(banded_matrix, vector, m):
+    """
+    Résoudre le système linéaire Ax = b en utilisant la factorisation de Cholesky pour une matrice bande.
+    """
+    L, LT = cholesky_decomposition_banded_matrix(banded_matrix, m)
+    matrix_rows = len(L)
+
+    # Résoudre Ly = b en utilisant la substitution avant
+    y = [[0.0] for _ in range(matrix_rows)]  # Initialize y as a column vector
+    for i in range(matrix_rows):
+        y[i][0] = (vector[i] - sum(L[i][k] * y[k][0] for k in range(max(0, i - m + 1), i))) / L[i][i]
+
+    # Résoudre L^Tx = y en utilisant la substitution arrière
+    result = [[0.0] for _ in range(matrix_rows)]  # Initialize x as a column vector
+    for i in range(matrix_rows-1, -1, -1):
+        result[i][0] = (y[i][0] - sum(LT[i][k] * result[k][0] for k in range(i+1, min(i+m, matrix_rows)))) / LT[i][i]
+
+    return result
+
+
+def solve_gauss_seidel(matrix, vector, epsilon):
+    # Initialization of max and result
+    max = 0
+    matrix_rows = len(matrix)
+    result = [[0] for _ in range(matrix_rows)]
+
+    # Solving matrix
+    while True:
+        for i in range(matrix_rows):
+            s = 0
+
+            for j in range(matrix_rows):
+                if j != i:
+                    s += matrix[i][j] * vector[j][0]
+            
+            s = (s - vector[i][0]) / matrix[i][i]
+            if max < (abs_result := abs(result[i][0] - s)):
+                max = abs_result
+            
+        if max > epsilon:
+            break
+    
+    return result
+
+
+def solve_jacobi(matrix, vector, epsilon):
+    # Initialization of max and result
+    max = 0
+    matrix_rows = len(matrix)
+    x = [[] for _ in range(matrix_rows)]
+    result = [[0] for _ in range(matrix_rows)]
+
+    while True:
+        for i in range(matrix_rows):
+            x[i][0] = result[i][0]
+        
+        for i in range(matrix_rows):
+            s = vector[i]
+
+            for j in range(matrix_rows):
+                if i != j:
+                    s -= matrix[i][j] * x[j][0]
+            
+            result = s / matrix[i][i]
+
+            if max < (abs_result := abs(x[i][0] - result[i][0])):
+                max = abs_result
+
+        if max > epsilon:
+            break
+    
+    return result
+    
+
