@@ -1,0 +1,23 @@
+# Types of matrix
+UPPER_MATRIX = "upper"
+LOWER_MATRIX = "lower"
+DENSE_MATRIX = "dense"
+DENSE_SYMMETRIC_MATRIX = "symmetric dense"
+BANDED_SYMMETRIC_MATRIX = "symmetric banded"
+BANDED_MATRIX = "banded"
+UPPER_BANDED_MATRIX = "upper banded"
+LOWER_BANDED_MATRIX = "lower banded"
+VECTOR = "vector"
+INVERSE = "inverse"
+TRANSPOSE = "transpose"
+
+# Types of algorithms
+GAUSS_JORDAN = "gauss jordan"
+GAUSS_ELIMINATOR_SYMMETRIC_DENSE_MATRIX = "gauss elimination symmetric dense matrix"
+GAUSS_ELIMINATOR_SYMMETRIC_BANDED_MATRIX = "gauss eliminatoion symmetric banded matrix"
+PIVOT_PARTIEL_GAUSS = "pivot partiel gauss"
+PIVOT_PARTIEL_GAUSS_BANDED = "pivot partiel gauss banded"
+LU = "LU"
+CHOLESKY = "cholesky"
+JACOBI = "jacobi"
+GAUSS_SEIDEL = "gauss-seidel"
