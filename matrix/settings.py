@@ -27,7 +27,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-x)))fu5ejno1+35q6qj0#js@z=hyrbp8-aqv33yi8($upv4joy'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = ['matrixapi-ez2e.onrender.com', '127.0.0.1']
 
