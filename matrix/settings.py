@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 
 from pathlib import Path
+import os
 from dotenv import dotenv_values, load_dotenv
 
 load_dotenv()
@@ -28,7 +29,7 @@ SECRET_KEY = 'django-insecure-x)))fu5ejno1+35q6qj0#js@z=hyrbp8-aqv33yi8($upv4joy
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = ['127.0.0.1', '*']
+ALLOWED_HOSTS = ['matrixapi-ez2e.onrender.com', '127.0.0.1']
 
 # Application definition
 INSTALLED_APPS = [
@@ -135,6 +136,8 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
 STATIC_URL = 'static/'
+MEDIA_URL = 'media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
