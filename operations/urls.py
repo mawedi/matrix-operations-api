@@ -20,6 +20,6 @@ urlpatterns = [
     path('add/<str:_id>/', RetrieveMatrixOperationAPIView.as_view(), name='add-multiply-result'),
     path('substract/<str:_id>/', RetrieveMatrixOperationAPIView.as_view(), name='substract-multiply-result'),
     path('solve/<str:_id>/', RetrieveMatrixOperationAPIView.as_view(), name='retrieve-solving-result'),
-    path('inverse/<str:_id>/', RetrieveMatrixInverseAPIView.as_view(), name='retrive-matrix-inverse'),
-    path('transpose/<str:_id>/', RetrieveMatrixTransposeAPIView.as_view(), name='retrive-matrix-transpose')
+    path('inverse/<str:_id>/', RetrieveMatrixInverseTransposeAPIView.as_view(), name='retrive-matrix-inverse'),
+    path('transpose/<str:_id>/', RetrieveMatrixInverseTransposeAPIView.as_view(), name='retrive-matrix-transpose')
 ]

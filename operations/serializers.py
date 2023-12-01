@@ -5,8 +5,7 @@ from .models import (
     MatrixDeterminant,
     MatrixRank,
     MatrixOperation,
-    MatrixInverse,
-    MatrixTranspose
+    MatrixInverseTranspose
 )
 
 # Create your serializers
@@ -46,13 +45,7 @@ class NestedMatrixRankSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class MatrixInverseSerializer(serializers.ModelSerializer):
+class MatrixInverseTransposeSerializer(serializers.ModelSerializer):
     class Meta:
-        model = MatrixInverse 
-        fields = '__all__'
-
-
-class MatrixTransposeSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = MatrixTranspose
+        model = MatrixInverseTranspose
         fields = '__all__'

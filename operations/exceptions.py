@@ -8,3 +8,15 @@ class SingularMatrixException(APIException):
     status_code = status.HTTP_400_BAD_REQUEST
     default_detail = _("The matrix is singular and does not have an inverse.")
     default_code = "Error"
+
+
+class DivisionByZeroException(APIException):
+    status_code = status.HTTP_400_BAD_REQUEST
+    default_detail = _("The matrix has 0 in the diagonal.")
+    default_code = "Error"
+
+
+class PositiveMatrixException(APIException):
+    status_code = status.HTTP_400_BAD_REQUEST
+    default_detail = _("The matrix is not positive.")
+    default_code = "Error"

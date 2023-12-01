@@ -1,17 +1,15 @@
 from django.contrib import admin
 from .models import (
     MatrixOperation,
-    MatrixInverse,
+    MatrixInverseTranspose,
     MatrixDeterminant,
     MatrixRank,
-    Matrix,
-    MatrixTranspose
+    Matrix
 )
 
 # Register your models here.
 admin.site.register(MatrixOperation)
-admin.site.register(MatrixInverse)
+admin.site.register(MatrixInverseTranspose)
 admin.site.register(MatrixRank),
 admin.site.register(MatrixDeterminant)
 admin.site.register(Matrix)
-admin.site.register(MatrixTranspose)

@@ -6,14 +6,16 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import AllowAny
 
-from .exceptions import SingularMatrixException
+from .exceptions import (
+    SingularMatrixException,
+    DivisionByZeroException
+)
 from .models import (
     Matrix,
     MatrixDeterminant,
     MatrixRank,
     MatrixOperation,
-    MatrixInverse,
-    MatrixTranspose
+    MatrixInverseTranspose
 )
 from .serializers import (
     MatrixSerializer,
@@ -22,8 +24,7 @@ from .serializers import (
     MatrixRankSerializer,
     NestedMatrixRankSerializer,
     MatrixOperationSerializer,
-    MatrixInverseSerializer, 
-    MatrixTransposeSerializer
+    MatrixInverseTransposeSerializer, 
 )
 from .utils import *
 from .types import *
@@ -54,19 +55,11 @@ class RetrieveMatrixRankAPIView(RetrieveAPIView):
     lookup_field = '_id'
 
 
-class RetrieveMatrixInverseAPIView(RetrieveAPIView):
+class RetrieveMatrixInverseTransposeAPIView(RetrieveAPIView):
     permission_classes = [AllowAny, ]
     authentication_classes = []
-    queryset = MatrixInverse.objects.all()
-    serializer_class = MatrixInverseSerializer
-    lookup_field = '_id'
-
-
-class RetrieveMatrixTransposeAPIView(RetrieveAPIView):
-    permission_classes = [AllowAny, ]
-    authentication_classes = []
-    queryset = MatrixTranspose.objects.all()
-    serializer_class = MatrixTransposeSerializer
+    queryset = MatrixInverseTranspose.objects.all()
+    serializer_class = MatrixInverseTransposeSerializer
     lookup_field = '_id'
 
 
@@ -77,7 +70,7 @@ class MultiplyMatrixAPIView(APIView):
     def post(self, request, *args, **kwargs):
         # Getting data from the request
         first_matrix = request.data.get('first_matrix')
-        second_matrix = request.data.get('second_matrix')
+        second_matrix = request.data.get('second_matrix', None)
         first_matrix_type = request.data.get('first_matrix_type', None)
         second_matrix_type = request.data.get('second_matrix_type', None)
         m_first_matrix = int(request.data.get('m_first_matrix', 0))
@@ -97,15 +90,15 @@ class MultiplyMatrixAPIView(APIView):
                 second_matrix = inverse_gauss_jordan(first_matrix)
 
             elif second_matrix_type == TRANSPOSE:
-                second_matrix = transpose_banded_matrix()
+                second_matrix = transpose_banded_matrix(first_matrix)
         
         else:
             serializer_instance_second_matrix = MatrixSerializer(data={'matrix': second_matrix})
             if not(serializer_instance_second_matrix.is_valid(raise_exception=True)):
                 return Response({"message": "Wrong Data!"}, status=status.HTTP_400_BAD_REQUEST)
-
+            
+            second_matrix = serializer_instance_second_matrix.validated_data.get('matrix')
         first_matrix = serializer_instance_first_matrix.validated_data.get('matrix')
-        second_matrix = serializer_instance_second_matrix.validated_data.get('matrix')
         
         # Calculating the matrix considering their types
         if first_matrix_type == UPPER_MATRIX and second_matrix_type == LOWER_MATRIX:
@@ -245,9 +238,9 @@ class InverseMatrixAIPView(APIView):
         # Saving the result
         data = {
             'matrix': matrix,
-            'inverse': matrix_inverse
+            'result': matrix_inverse
         }
-        matrix_inverse_serializer = MatrixInverseSerializer(data=data)
+        matrix_inverse_serializer = MatrixInverseTransposeSerializer(data=data)
         if matrix_inverse_serializer.is_valid(raise_exception=True):
             result_instance = matrix_inverse_serializer.save()
 
@@ -273,7 +266,6 @@ class DeterminantMatrixAPIView(APIView):
             determinant = np.linalg.det(matrix)
         
         except np.linalg.LinAlgError:
-            print("HELO ")
             raise SingularMatrixException("The matrix is not singular.")
 
         # Saving the result
@@ -313,7 +305,6 @@ class SolveMatrixAPIView(APIView):
 
     def post(self, request, *args, **kwargs):
         # Getting the data from the request
-        print(request.data)
         matrix = request.data.get('matrix')
         vector = request.data.get('vector')
         matrix_type = request.data.get('matrix_type', None)
@@ -339,7 +330,7 @@ class SolveMatrixAPIView(APIView):
                 result = solve_upper_banded_matrix(matrix, vector, m)
             elif matrix_type == LOWER_BANDED_MATRIX:
                 result = solve_lower_banded_matrix(matrix, vector, m)
-
+            
             elif matrix_type == DENSE_SYMMETRIC_MATRIX and algorithm == GAUSS_ELIMINATOR_SYMMETRIC_DENSE_MATRIX:
                 result = solve_symmetric_desne_matrix_gauss_elimination(matrix, vector) 
             elif matrix_type == BANDED_SYMMETRIC_MATRIX and algorithm == GAUSS_ELIMINATOR_SYMMETRIC_BANDED_MATRIX:
@@ -347,16 +338,16 @@ class SolveMatrixAPIView(APIView):
             elif matrix_type == DENSE_SYMMETRIC_MATRIX and algorithm == GAUSS_JORDAN_SYMMETRIC_DENSE_MATRIX:
                 result = solve_symmetric_matrix_gauss_jordan(matrix, vector)
             elif matrix_type == BANDED_SYMMETRIC_MATRIX and algorithm == GAUSS_JORDAN_SYMMETRIC_BANDED_MATRIX:
-                result = solve_symmetric_banded_matrix_gauss_jordan(matrix, vector) 
+                result = solve_symmetric_matrix_gauss_jordan(matrix, vector) # False one
             elif matrix_type == DENSE_SYMMETRIC_MATRIX and algorithm == LU_DENSE_SYMMETRIC:
                 result = solve_symmetric_dense_matrix_LU(matrix, vector)
             elif matrix_type == BANDED_SYMMETRIC_MATRIX and algorithm == LU_BANDED_SYMMETRIC:
-                result = solve_symmetric_banded_matrix_LU(matrix, vector, m)
+                result = solve_symmetric_dense_matrix_LU(matrix, vector) # False one
             
             elif matrix_type == DENSE_MATRIX and algorithm == CHOLESKY_DENSE_MATRIX:
                 result = solve_cholesky_dense_matrix(matrix, vector)
             elif matrix_type == BANDED_MATRIX and algorithm == CHOLESKY_BANDED_MATRIX:
-                result = solve_cholesky_banded_matrix(matrix, m)
+                result = solve_cholesky_banded_matrix(matrix, vector, m)
 
             elif matrix_type == DENSE_MATRIX and algorithm == PIVOT_PARTIEL_GAUSS_DENSE:
                 result = solve_dense_matrix_pivot_partiel_gauss(matrix, vector)
@@ -370,7 +361,7 @@ class SolveMatrixAPIView(APIView):
             
         except np.linalg.LinAlgError:
             raise SingularMatrixException({"message": "The matrix is singular and does not have an inverse."})
-        
+        print(result)
         # Saving the result
         data = {
             'first_matrix': matrix,
@@ -400,7 +391,7 @@ class TransposeMatrixAPIView(APIView):
         transpose_matrix = np.transpose(matrix)
         
         # Saving the result
-        serializer_result_instance = MatrixTransposeSerializer(data={'matrix': transpose_matrix, 'transpose': transpose_matrix})
+        serializer_result_instance = MatrixInverseTransposeSerializer(data={'matrix': transpose_matrix, 'result': transpose_matrix})
         if serializer_result_instance.is_valid(raise_exception=True):
             result_instance = serializer_result_instance.save()
         

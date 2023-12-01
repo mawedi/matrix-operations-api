@@ -1,5 +1,10 @@
 import numpy as np
 
+from .exceptions import (
+    DivisionByZeroException,
+    PositiveMatrixException
+)
+
 # Matrix addition
 def add_matrix_to_matrix(first_matrix, second_matrix):
     # Matrix initialization
@@ -244,11 +249,11 @@ def multiply_upper_vector(upper_matrix, vector):
 def multiply_lower_vector(lower_matrix, vector):
     # Vector initialization
     rows_upper_matrix = len(lower_matrix)
-    result = [[] for _ in range(rows_upper_matrix)]
+    result = [[0.0] for _ in range(rows_upper_matrix)]
 
     # Calculation
     for i in range(rows_upper_matrix):
-        result[i] = sum(lower_matrix[i][j] * vector[j] for j in range(i))
+        result[i][0] = sum(lower_matrix[i][j] * vector[j][0] for j in range(i))
 
     return result
 
@@ -291,30 +296,38 @@ def multiply_upper_banded_vector(upper_banded, vector, m):
 def solve_upper_matrix(upper_matrix, vector):
     # Vector initialization
     rows_upper_matrix = len(upper_matrix)
-    result = [[] for _ in range(rows_upper_matrix)]
-
+    result = [[0.0] for _ in range(rows_upper_matrix)]
+    
     # Calculation
     for i in range(rows_upper_matrix - 1, -1, -1):
         result[i][0] = vector[i][0]
-
+        
         for j in range(i + 1, rows_upper_matrix):
-            result[i][0] -= upper_matrix[i][j] * vector[j]
+            result[i][0] -= upper_matrix[i][j] * result[j][0]
 
-        result[i][0] = result[i][0] / upper_matrix[i][i]
+        try:        
+            result[i][0] = result[i][0] / upper_matrix[i][i]
 
+        except ZeroDivisionError:
+            raise DivisionByZeroException({"message": "The matrix 0 in the diagonal."})
+        
     return result
 
 
 def solve_lower_matrix(lower_matrix, vector):
     # Vector initialization
     vector_rows = len(vector)
-    result = [[0] for _ in range(vector_rows)]  # Initialize x as a column vector
+    result = [[0.0] for _ in range(vector_rows)]  # Initialize x as a column vector
 
     # Calculation
     for i in range(vector_rows):
         summation = sum(lower_matrix[i][j] * result[j][0] for j in range(i))
-        result[i][0] = (vector[i] - summation) / lower_matrix[i][i]
+        try:
+            result[i][0] = (vector[i][0] - summation) / lower_matrix[i][i]
 
+        except ZeroDivisionError:
+            raise DivisionByZeroException({"message": "The matrix 0 in the diagonal."})
+        
     return result
 
 
@@ -330,34 +343,47 @@ def solve_lower_banded_matrix(matrix, vector, m):
         for j in range(max(0, i - m), i):
             result[i][0] -= matrix[i][j] * result[j][0]
 
-        result[i][0] = result[i][0] / matrix[i][i]
-
+        try:
+            result[i][0] = result[i][0] / matrix[i][i]
+        
+        except DivisionByZeroException:
+            raise DivisionByZeroException({"message": "The matrix 0 in the diagonal."})
+    
     return result
 
 
 def solve_upper_banded_matrix(upper_banded, vector, m):
     # Vector initialization
     rows_upper_banded = len(upper_banded)
-    result = [[] for _ in range(rows_upper_banded)]
+    result = [[0.0] for _ in range(rows_upper_banded)]
 
     # Calculation
     for i in range(rows_upper_banded - 1, -1, -1):
         result[i][0] = vector[i][0]
 
-        for j in range(i + 1, min(i + m, rows_upper_banded)):
-            result[i][0] -= upper_banded[i][j] * vector[j]
-            
-        result[i][0] = result[i][0] / upper_banded[i][i]
+        for j in range(i + 1, min(i + m + 1, rows_upper_banded)):
+            result[i][0] -= upper_banded[i][j] * result[j][0]
+        
+        try:
+            result[i][0] = result[i][0] / upper_banded[i][i]
 
+        except DivisionByZeroException:
+            raise DivisionByZeroException({"message": "The matrix 0 in the diagonal."})
+        
     return result
 
 
 def eliminate_gauss_symmetric_dense_matrix(matrix):
     matrix_rows = len(matrix)
-
+    
     for k in range(matrix_rows - 1):
         for j in range(k + 1, matrix_rows):
-            matrix[k][j] /= matrix[k][k]
+            try:
+                matrix[k][j] = matrix[k][j] / matrix[k][k]
+
+            except ZeroDivisionError:
+                raise DivisionByZeroException({"message": "The matrix 0 in the diagonal."})
+            
             for i in range(j, matrix_rows):
                 matrix[i][j] -= matrix[i][k] * matrix[k][j]
     
@@ -377,11 +403,15 @@ def solve_symmetric_desne_matrix_gauss_elimination(matrix, vector):
 
     # Résolution du système linéaire résultant par substitution arrière
     result = [[0.0] for _ in range(matrix_rows)]  # Initialize x as a column vector
-    for i in range(add_matrix_to_matrix - 1, -1, -1):
-        result[i][0] = vector[i] / matrix[i][i]
-        for j in range(i + 1, matrix_rows):
-            result[i][0] -= matrix[j][i] / matrix[i][i] * result[j][0]
+    for i in range(matrix_rows - 1, -1, -1):
+        try:
+            result[i][0] = vector[i][0] / matrix[i][i]
+            for j in range(i + 1, matrix_rows):
+                result[i][0] -= matrix[j][i] / matrix[i][i] * result[j][0]
 
+        except ZeroDivisionError:
+                raise DivisionByZeroException({"message": "The matrix 0 in the diagonal."})
+        
     return result
 
 
@@ -390,7 +420,12 @@ def eliminate_gauss_symmetric_banded_matrix(banded_matrix, m):
 
     for k in range(matrix_rows - 1):
         for j in range(k + 1, min(k + m, matrix_rows)):
-            banded_matrix[j][k] /= banded_matrix[k][k]
+            try:
+                banded_matrix[j][k] /= banded_matrix[k][k]
+            
+            except ZeroDivisionError:
+                raise DivisionByZeroException({"message": "The matrix 0 in the diagonal."})
+
             for i in range(j, min(j + m, matrix_rows)):
                 banded_matrix[i][j] -= banded_matrix[i][k] * banded_matrix[k][j]
     
@@ -406,62 +441,75 @@ def solve_symmetric_banded_matrix_gauss_elimination(banded_matrix, vector, m):
     # Résolution du système linéaire résultant par substitution arrière
     result = [[0.0] for _ in range(matrix_rows)]  # Initialize x as a column vector
     for i in range(matrix_rows - 1, -1, -1):
-        result[i][0] = vector[i] / banded_matrix[i][i]
-        for j in range(i + 1, min(i + m, matrix_rows)):
-            result[i][0] -= banded_matrix[j][i] / banded_matrix[i][i] * result[j][0]
+        try:
+            result[i][0] = vector[i][0] / banded_matrix[i][i]
+            for j in range(i + 1, min(i + m, matrix_rows)):
+                result[i][0] -= banded_matrix[j][i] / banded_matrix[i][i] * result[j][0]
+        
+        except ZeroDivisionError:
+                raise DivisionByZeroException({"message": "The matrix 0 in the diagonal."})
 
     return result
 
 
-def solve_symmetric_matrix_gauss_jordan(matrix, vector):
+def solve_symmetric_banded_matrix_gauss_jordan(matrix, vector, m):
+    if not positive_condition(matrix):
+        raise PositiveMatrixException({"message": "The matrix is not positive."}) 
+
     matrix_rows = len(matrix)
 
     for k in range(matrix_rows):
-        matrix[k][k] = matrix[k][k] ** 0.5  # Mise à jour de la diagonale principale
-        for i in range(k + 1, matrix_rows):
-            matrix[i][k] /= matrix[k][k]  # Mise à jour de la colonne k
-            for j in range(k + 1, matrix_rows):
-                matrix[i][j] -= matrix[i][k] * matrix[j][k]  # Mise à jour de la partie supérieure
+        # Pivotisation : Diviser la ligne k par l'élément a(kk)
+        pivot = matrix[k][k]
+        matrix[k, k:min(k + m, matrix_rows)] = matrix[k, k:min(k + m, matrix_rows)] / pivot
 
-    # Remise en forme de la matrix résultante
-    for i in range(matrix_rows):
-        for j in range(i + 1, matrix_rows):
-            matrix[i][j] = 0.0
+        # Élimination
+        for i in range(max(0, k - m), min(k + m, matrix_rows)):
+            if i != k:
+                factor = matrix[i, k]
+                matrix[i, k:min(k + m, matrix_rows)] -= factor * matrix[k, k:min(k + m, matrix_rows)]
 
-    # Résolution du système linéaire résultant par substitution arrière
-    result = [[0.0] for _ in range(matrix_rows)]  # Initialize x as a column vector
-    for i in range(matrix_rows - 1, -1, -1):
-        result[i][0] = vector[i] / matrix[i][i]
-        for j in range(i + 1, matrix_rows):
-            result[i][0] -= matrix[j][i] / matrix[i][i] * result[j][0]
-
+    # Récupérer le vecteur solution sous forme de colonne
+    result = matrix[:, -1]
     return result
 
 
-def solve_symmetric_banded_matrix_gauss_jordan(banded_matrix, vector, m):
-    matrix_rows = len(banded_matrix)
+def positive_condition(matrix):
+    try:
+        np.linalg.cholesky(matrix)
+        return True
+    
+    except np.linalg.LinAlgError:
+        return False
 
-    # Élimination de Gauss
-    for k in range(matrix_rows):
-        banded_matrix[k][k] = banded_matrix[k][k] ** 0.5  # Mise à jour de la diagonale principale
-        for i in range(k + 1, min(k + m, matrix_rows)):
-            banded_matrix[i][k] /= banded_matrix[k][k]  # Mise à jour de la colonne k
-            for j in range(k + 1, min(k + m, matrix_rows)):
-                banded_matrix[i][j] -= banded_matrix[i][k] * banded_matrix[j][k]  # Mise à jour de la partie supérieure
 
-    # Remise en forme de la matrice résultante
+def solve_symmetric_matrix_gauss_jordan(matrix, vector):
+    if not positive_condition(matrix):
+        raise PositiveMatrixException({"message": "The matrix is not positive."}) 
+
+    matrix_rows = len(matrix)
+
+    # Augmenter la matrice avec le vecteur b
     for i in range(matrix_rows):
-        for j in range(i + 1, matrix_rows):
-            banded_matrix[i][j] = 0.0
+        matrix[i].append(vector[i][0])
 
-    # Résolution du système linéaire résultant par substitution arrière
-    x = [[0.0] for _ in range(matrix_rows)]  # Initialize x as a column vector
-    for i in range(matrix_rows - 1, -1, -1):
-        x[i][0] = vector[i] / banded_matrix[i][i]
-        for j in range(i + 1, min(i + m, matrix_rows)):
-            x[i][0] -= banded_matrix[j][i] / banded_matrix[i][i] * x[j][0]
+    for k in range(matrix_rows):
+        # Pivotisation : Diviser la ligne k par l'élément a(kk)
+        pivot = matrix[k][k]
+        for j in range(k, matrix_rows + 1):
+            matrix[k][j] /= pivot
 
-    return x
+        # Élimination
+        for i in range(matrix_rows):
+            if i != k:
+                factor = matrix[i][k]
+                for j in range(k, matrix_rows + 1):
+                    matrix[i][j] -= factor * matrix[k][j]
+
+    # Récupérer le vecteur solution sous forme de colonne
+    solution = [[row[matrix_rows]] for row in matrix]
+
+    return solution
 
 
 def lu_decomposition_dense(matrix):
@@ -494,7 +542,7 @@ def solve_symmetric_dense_matrix_LU(matrix, vector):
     # Étape 1: Résoudre Ly = b pour y
     y = [[0.0] for _ in range(matrix_rows)]  # Initialize y as a column vector
     for i in range(matrix_rows):
-        y[i][0] = vector[i] - sum(L[i][k] * y[k][0] for k in range(i))
+        y[i][0] = vector[i][0] - sum(L[i][k] * y[k][0] for k in range(i))
 
     # Étape 2: Résoudre Ux = y pour x
     result = [[0.0] for _ in range(matrix_rows)]  # Initialize x as a column vector
@@ -537,15 +585,20 @@ def solve_symmetric_banded_matrix_LU(matrix, vector, bandwidth):
     for i in range(matrix_rows):
         for j in range(max(0, i - bandwidth + 1), i):
             y[i][0] -= L[i][j] * y[j][0]
-        y[i][0] += vector[i]
+        y[i][0] += vector[i][0]
 
     # Étape 2: Résoudre Ux = y pour x
     x = [[0.0] for _ in range(matrix_rows)]  # Initialize x as a column vector
     for i in range(matrix_rows - 1, -1, -1):
         for j in range(i + 1, min(i + bandwidth, matrix_rows)):
             x[i][0] -= U[i][j] * x[j][0]
-        x[i][0] += y[i][0] / U[i][i]
+        
+        try:
+            x[i][0] += y[i][0] / U[i][i]
 
+        except ZeroDivisionError:
+            raise DivisionByZeroException({"message": "The matrix 0 in the diagonal."})
+        
     return x
 
 
@@ -579,7 +632,6 @@ def solve_dense_matrix_pivot_partiel_gauss(dense_matrix, vector):
             used_matrix[j][columns_dense_matrix] -= used_matrix[j][i] * vector_result[i][0]
 
     return vector_result
-
 
 
 def solve_banded_matrix_pivot_partial_gauss(banded_matrix, vector, m):
@@ -628,9 +680,13 @@ def cholesky_decomposition_dense_matrix(matrix):
                 L[i][j] = (matrix[i][j] - summation) ** 0.5
             else:
                 # Éléments non diagonaux
-                summation = sum(L[i][k] * L[j][k] for k in range(j))
-                L[i][j] = (matrix[i][j] - summation) / L[j][j]
+                try:
+                    summation = sum(L[i][k] * L[j][k] for k in range(j))
+                    L[i][j] = (matrix[i][j] - summation) / L[j][j]
 
+                except ZeroDivisionError:
+                    raise DivisionByZeroException({"message": "The matrix 0 in the diagonal."})
+                
     # Transposer la matrice L pour obtenir Lᵀ
     LT = [[L[j][i] for j in range(n)] for i in range(n)]
 
@@ -647,8 +703,12 @@ def solve_cholesky_dense_matrix(matrix, vector):
 
     y = [[0.0] for _ in range(matrix_rows)]  # Initialize y as a column vector
     for i in range(matrix_rows):
-        y[i][0] = (vector[i] - sum(L[i][k] * y[k][0] for k in range(i))) / L[i][i]
+        try:
+            y[i][0] = (vector[i][0] - sum(L[i][k] * y[k][0] for k in range(i))) / L[i][i]
 
+        except ZeroDivisionError:
+            raise DivisionByZeroException({"message": "The matrix 0 in the diagonal."})
+        
     # Résoudre Lᵀx = y en utilisant la substitution arrière
     result = [[0.0] for _ in range(matrix_rows)]  # Initialize x as a column vector
     for i in range(matrix_rows - 1, -1, -1):
@@ -691,8 +751,12 @@ def solve_cholesky_banded_matrix(banded_matrix, vector, m):
     # Résoudre Ly = b en utilisant la substitution avant
     y = [[0.0] for _ in range(matrix_rows)]  # Initialize y as a column vector
     for i in range(matrix_rows):
-        y[i][0] = (vector[i] - sum(L[i][k] * y[k][0] for k in range(max(0, i - m + 1), i))) / L[i][i]
+        try:
+            y[i][0] = (vector[i][0] - sum(L[i][k] * y[k][0] for k in range(max(0, i - m + 1), i))) / L[i][i]
 
+        except ZeroDivisionError:
+            raise DivisionByZeroException({"message": "The matrix 0 in the diagonal."})
+        
     # Résoudre L^Tx = y en utilisant la substitution arrière
     result = [[0.0] for _ in range(matrix_rows)]  # Initialize x as a column vector
     for i in range(matrix_rows-1, -1, -1):
@@ -730,20 +794,20 @@ def solve_jacobi(matrix, vector, epsilon):
     # Initialization of max and result
     max = 0
     matrix_rows = len(matrix)
-    x = [[] for _ in range(matrix_rows)]
+    x = [[0] for _ in range(matrix_rows)]
     result = [[0] for _ in range(matrix_rows)]
 
     while True:
         for i in range(matrix_rows):
             x[i][0] = result[i][0]
-        
+
         for i in range(matrix_rows):
             s = vector[i]
 
             for j in range(matrix_rows):
                 if i != j:
                     s -= matrix[i][j] * x[j][0]
-            
+
             result = s / matrix[i][i]
 
             if max < (abs_result := abs(x[i][0] - result[i][0])):
@@ -752,6 +816,4 @@ def solve_jacobi(matrix, vector, epsilon):
         if max > epsilon:
             break
     
-    return result
-    
-
+    return result 
