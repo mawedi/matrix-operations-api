@@ -29,7 +29,7 @@ SECRET_KEY = 'django-insecure-x)))fu5ejno1+35q6qj0#js@z=hyrbp8-aqv33yi8($upv4joy
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['matrixapi-ez2e.onrender.com', '127.0.0.1', '192.168.1.16']
+ALLOWED_HOSTS = ['matrixapi-ez2e.onrender.com', '127.0.0.1', '192.168.1.16', 'matrixoperationsapi-production.up.railway.app']
 
 # Application definition
 INSTALLED_APPS = [
