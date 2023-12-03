@@ -27,4 +27,4 @@ JACOBI = "jacobi"
 GAUSS_SEIDEL = "gauss-seidel"
 
 # Epsilon value
-EPSILON = 0.0000001
+EPSILON = 0.001

@@ -111,10 +111,12 @@ class MultiplyMatrixAPIView(APIView):
             result = multiply_banded_lower_banded_matrix(first_matrix, second_matrix, m_first_matrix)
         elif first_matrix_type == LOWER_BANDED_MATRIX and second_matrix_type == UPPER_BANDED_MATRIX:
             result = multiply_lower_banded_upper_banded_matrix(first_matrix, second_matrix, m_first_matrix, m_second_matrix)
+            
         elif first_matrix_type == BANDED_MATRIX and second_matrix_type == DENSE_MATRIX:
             result = multiply_banded_dense(first_matrix, second_matrix, m_first_matrix)
         elif first_matrix_type == LOWER_BANDED_MATRIX and second_matrix_type == DENSE_MATRIX:
             result = multiply_lower_banded_dense(first_matrix, second_matrix, m_first_matrix)
+        
 
         # Vector multiplication    
         elif first_matrix_type == DENSE_MATRIX and second_matrix == VECTOR:
@@ -129,7 +131,7 @@ class MultiplyMatrixAPIView(APIView):
             result = multiply_upper_banded_vector(first_matrix, second_matrix, m_first_matrix)
         else:
             result = multiply_dense_dense(first_matrix, second_matrix)
-            
+
         # Saving the result
         data = {
             'first_matrix': first_matrix,
@@ -309,7 +311,9 @@ class SolveMatrixAPIView(APIView):
         vector = request.data.get('vector')
         matrix_type = request.data.get('matrix_type', None)
         algorithm = request.data.get('algorithm', None)
+        max_iteration = request.data.get('max_iteration', 0)
         m = int(request.data.get('m', 0))
+        epsilon = request.data.get('epsilon', -1)
 
         # Verificatino of the matrix form
         serializer_matrix_instance = MatrixSerializer(data={'matrix': matrix})
@@ -321,47 +325,43 @@ class SolveMatrixAPIView(APIView):
             return Response({"message": "Wrong data!"}, status=status.HTTP_400_BAD_REQUEST)
         
         # Solving the matrix
-        try:
-            if matrix_type == UPPER_MATRIX:
-                result = solve_upper_matrix(matrix, vector)
-            elif matrix_type == LOWER_MATRIX:
-                result = solve_lower_matrix(matrix, vector)
-            elif matrix_type == UPPER_BANDED_MATRIX:
-                result = solve_upper_banded_matrix(matrix, vector, m)
-            elif matrix_type == LOWER_BANDED_MATRIX:
-                result = solve_lower_banded_matrix(matrix, vector, m)
-            
-            elif matrix_type == DENSE_SYMMETRIC_MATRIX and algorithm == GAUSS_ELIMINATOR_SYMMETRIC_DENSE_MATRIX:
-                result = solve_symmetric_desne_matrix_gauss_elimination(matrix, vector) 
-            elif matrix_type == BANDED_SYMMETRIC_MATRIX and algorithm == GAUSS_ELIMINATOR_SYMMETRIC_BANDED_MATRIX:
-                result = solve_symmetric_banded_matrix_gauss_elimination(matrix, vector, m)
-            elif matrix_type == DENSE_SYMMETRIC_MATRIX and algorithm == GAUSS_JORDAN_SYMMETRIC_DENSE_MATRIX:
-                result = solve_symmetric_matrix_gauss_jordan(matrix, vector)
-            elif matrix_type == BANDED_SYMMETRIC_MATRIX and algorithm == GAUSS_JORDAN_SYMMETRIC_BANDED_MATRIX:
-                result = solve_symmetric_matrix_gauss_jordan(matrix, vector) # False one
-            elif matrix_type == DENSE_SYMMETRIC_MATRIX and algorithm == LU_DENSE_SYMMETRIC:
-                result = solve_symmetric_dense_matrix_LU(matrix, vector)
-            elif matrix_type == BANDED_SYMMETRIC_MATRIX and algorithm == LU_BANDED_SYMMETRIC:
-                result = solve_symmetric_dense_matrix_LU(matrix, vector) # False one
-            
-            elif matrix_type == DENSE_MATRIX and algorithm == CHOLESKY_DENSE_MATRIX:
-                result = solve_cholesky_dense_matrix(matrix, vector)
-            elif matrix_type == BANDED_MATRIX and algorithm == CHOLESKY_BANDED_MATRIX:
-                result = solve_cholesky_banded_matrix(matrix, vector, m)
+        if matrix_type == UPPER_MATRIX:
+            result = solve_upper_matrix(matrix, vector)
+        elif matrix_type == LOWER_MATRIX:
+            result = solve_lower_matrix(matrix, vector)
+        elif matrix_type == UPPER_BANDED_MATRIX:
+            result = solve_upper_banded_matrix(matrix, vector, m)
+        elif matrix_type == LOWER_BANDED_MATRIX:
+            result = solve_lower_banded_matrix(matrix, vector, m)
+        
+        elif matrix_type == DENSE_SYMMETRIC_MATRIX and algorithm == GAUSS_ELIMINATOR_SYMMETRIC_DENSE_MATRIX:
+            result = solve_symmetric_desne_matrix_gauss_elimination(matrix, vector) 
+        elif matrix_type == BANDED_SYMMETRIC_MATRIX and algorithm == GAUSS_ELIMINATOR_SYMMETRIC_BANDED_MATRIX:
+            result = solve_symmetric_banded_matrix_gauss_elimination(matrix, vector, m)
+        elif matrix_type == DENSE_SYMMETRIC_MATRIX and algorithm == GAUSS_JORDAN_SYMMETRIC_DENSE_MATRIX:
+            result = solve_symmetric_matrix_gauss_jordan(matrix, vector)
+        elif matrix_type == BANDED_SYMMETRIC_MATRIX and algorithm == GAUSS_JORDAN_SYMMETRIC_BANDED_MATRIX:
+            result = solve_symmetric_matrix_gauss_jordan(matrix, vector) # False one
+        elif matrix_type == DENSE_SYMMETRIC_MATRIX and algorithm == LU_DENSE_SYMMETRIC:
+            result = solve_symmetric_dense_matrix_LU(matrix, vector)
+        elif matrix_type == BANDED_SYMMETRIC_MATRIX and algorithm == LU_BANDED_SYMMETRIC:
+            result = solve_symmetric_banded_matrix_LU(matrix, vector, m)
+        
+        elif matrix_type == DENSE_MATRIX and algorithm == CHOLESKY_DENSE_MATRIX:
+            result = solve_cholesky_dense_matrix(matrix, vector)
+        elif matrix_type == BANDED_MATRIX and algorithm == CHOLESKY_BANDED_MATRIX:
+            result = solve_cholesky_banded_matrix(matrix, vector, m)
 
-            elif matrix_type == DENSE_MATRIX and algorithm == PIVOT_PARTIEL_GAUSS_DENSE:
-                result = solve_dense_matrix_pivot_partiel_gauss(matrix, vector)
-            elif matrix_type == BANDED_MATRIX and algorithm == PIVOT_PARTIEL_GAUSS_BANDED:
-                result = solve_banded_matrix_pivot_partial_gauss(matrix, vector, m)
+        elif matrix_type == DENSE_MATRIX and algorithm == PIVOT_PARTIEL_GAUSS_DENSE:
+            result = solve_dense_matrix_pivot_partiel_gauss(matrix, vector)
+        elif matrix_type == BANDED_MATRIX and algorithm == PIVOT_PARTIEL_GAUSS_BANDED:
+            result = solve_dense_matrix_pivot_partiel_gauss(matrix, vector)
             
-            elif algorithm == JACOBI:
-                result = solve_jacobi(matrix, vector, EPSILON)
-            elif algorithm == GAUSS_SEIDEL:
-                result = solve_gauss_seidel(matrix, vector, EPSILON)
-            
-        except np.linalg.LinAlgError:
-            raise SingularMatrixException({"message": "The matrix is singular and does not have an inverse."})
-        print(result)
+        elif algorithm == JACOBI:
+            result = solve_jacobi(matrix, vector, epsilon, max_iteration)
+        elif algorithm == GAUSS_SEIDEL:
+            result = solve_gauss_seidel(matrix, vector, epsilon, max_iteration)
+        
         # Saving the result
         data = {
             'first_matrix': matrix,
@@ -371,7 +371,7 @@ class SolveMatrixAPIView(APIView):
         serializer_result_instance = MatrixOperationSerializer(data=data)
         if serializer_result_instance.is_valid(raise_exception=True):
             result_instance = serializer_result_instance.save()
-
+    
         return Response({'_id': result_instance._id}, status=status.HTTP_201_CREATED)
 
 
@@ -391,7 +391,7 @@ class TransposeMatrixAPIView(APIView):
         transpose_matrix = np.transpose(matrix)
         
         # Saving the result
-        serializer_result_instance = MatrixInverseTransposeSerializer(data={'matrix': transpose_matrix, 'result': transpose_matrix})
+        serializer_result_instance = MatrixInverseTransposeSerializer(data={'matrix': matrix, 'result': transpose_matrix})
         if serializer_result_instance.is_valid(raise_exception=True):
             result_instance = serializer_result_instance.save()
         
