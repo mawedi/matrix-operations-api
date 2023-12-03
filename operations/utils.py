@@ -772,7 +772,7 @@ def solve_cholesky_banded_matrix(banded_matrix, vector, m):
             y[i][0] = (vector[i][0] - sum(L[i][k] * y[k][0] for k in range(max(0, i - m + 1), i))) / L[i][i]
 
         except ZeroDivisionError:
-            raise DivisionByZeroException({"message": "La matrice admet un zero dans la diagonale."})
+            raise DivisionByZeroException({"message": "La matrice est divergente."})
         
     # Résoudre L^Tx = y en utilisant la substitution arrière
     result = [[0.0] for _ in range(matrix_rows)]  # Initialize x as a column vector
@@ -792,7 +792,7 @@ def solve_gauss_seidel(matrix, vector, epsilon, max_iteration):
     # Testing the convergence of the matrix
     eigenvalue, vectors = np.linalg.eig(matrix)
     if max(eigenvalue) >= 1:
-        raise ConvergenceMatrixException({"message": "The matrix is divergent"})
+        raise ConvergenceMatrixException({"message": "La matrice est divergente."})
 
     # Solving matrix
     while True:
