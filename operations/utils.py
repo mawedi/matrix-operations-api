@@ -789,7 +789,7 @@ def solve_cholesky_banded_matrix(banded_matrix, vector, m):
 
 def solve_gauss_seidel(matrix, vector, epsilon, max_iteration):
     # Initialization of max, result and counter
-    max = 0
+    maximum = 0
     matrix_rows = len(matrix)
     y = [[0] for _ in range(matrix_rows)]
     counter = 0
@@ -809,11 +809,11 @@ def solve_gauss_seidel(matrix, vector, epsilon, max_iteration):
                     s += matrix[i][j] * y[j][0]
             
             s = (s - vector[i][0]) / matrix[i][i]
-            if max < (abs_result := abs(y[i][0] - s)):
-                max = abs_result
+            if maximum < (abs_result := abs(y[i][0] - s)):
+                maximum = abs_result
             
         counter += 1
-        if max < epsilon or counter == max_iteration:
+        if maximum < epsilon or counter == max_iteration:
             break
 
     
@@ -821,7 +821,7 @@ def solve_gauss_seidel(matrix, vector, epsilon, max_iteration):
 
 
 def solve_jacobi(matrix, vector, epsilon, max_iteration):
-    # Initialization of max, result and counter
+    # Initialization of result and counter
     matrix_rows = len(matrix)
     x = [[0] for _ in range(matrix_rows)]
     y = [[0] for _ in range(matrix_rows)]
