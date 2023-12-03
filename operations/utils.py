@@ -809,13 +809,16 @@ def solve_gauss_seidel(matrix, vector, epsilon, max_iteration):
                     s += matrix[i][j] * y[j][0]
             
             s = (s - vector[i][0]) / matrix[i][i]
-            if maximum > (abs_result := abs(y[i][0] - s)):
+
+            if maximum < (abs_result := abs(y[i][0] - s)):
                 maximum = abs_result
             
-        counter += 1
-        if maximum < epsilon or counter == max_iteration:
-            break
+            y[i][0] = s
             
+        counter += 1
+        if maximum > epsilon or counter == max_iteration:
+            break
+        
     return y
 
 

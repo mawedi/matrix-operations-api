@@ -363,7 +363,7 @@ class SolveMatrixAPIView(APIView):
             
             result = solve_jacobi(matrix, vector, epsilon, max_iteration)
         elif algorithm == GAUSS_SEIDEL:
-            if epsilon < 0 and max_iteration:
+            if epsilon < 0 and max_iteration <= 0:
                 return Response({"message": "epsilon or max iteration must be provided."})
             result = solve_gauss_seidel(matrix, vector, epsilon, max_iteration)
         
