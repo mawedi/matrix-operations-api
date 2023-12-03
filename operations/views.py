@@ -333,7 +333,7 @@ class SolveMatrixAPIView(APIView):
             result = solve_upper_banded_matrix(matrix, vector, m)
         elif matrix_type == LOWER_BANDED_MATRIX:
             result = solve_lower_banded_matrix(matrix, vector, m)
-        
+
         elif matrix_type == DENSE_SYMMETRIC_MATRIX and algorithm == GAUSS_ELIMINATOR_SYMMETRIC_DENSE_MATRIX:
             result = solve_symmetric_desne_matrix_gauss_elimination(matrix, vector) 
         elif matrix_type == BANDED_SYMMETRIC_MATRIX and algorithm == GAUSS_ELIMINATOR_SYMMETRIC_BANDED_MATRIX:
@@ -358,8 +358,13 @@ class SolveMatrixAPIView(APIView):
             result = solve_dense_matrix_pivot_partiel_gauss(matrix, vector)
             
         elif algorithm == JACOBI:
+            if epsilon < 0 and max_iteration <= 0:
+                return Response({"message": "epsilon or max iteration must be provided."})
+            
             result = solve_jacobi(matrix, vector, epsilon, max_iteration)
         elif algorithm == GAUSS_SEIDEL:
+            if epsilon < 0 and max_iteration:
+                return Response({"message": "epsilon or max iteration must be provided."})
             result = solve_gauss_seidel(matrix, vector, epsilon, max_iteration)
         
         # Saving the result

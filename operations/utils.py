@@ -456,7 +456,7 @@ def solve_symmetric_banded_matrix_gauss_elimination(banded_matrix, vector, m):
 
 def solve_symmetric_banded_matrix_gauss_jordan(matrix, vector, m):
     if not positive_condition(matrix):
-        raise PositiveMatrixException({"message": "La matrice n'est pas positive."}) 
+        raise PositiveMatrixException({"message": "La matrice n'est pas définie positive."}) 
 
     matrix_rows = len(matrix)
 
@@ -487,7 +487,7 @@ def positive_condition(matrix):
 
 def solve_symmetric_matrix_gauss_jordan(matrix, vector):
     if not positive_condition(matrix):
-        raise PositiveMatrixException({"message": "La matrice n'est pas positive."}) 
+        raise PositiveMatrixException({"message": "La matrice n'est pas définie positive."}) 
 
     matrix_rows = len(matrix)
 
@@ -772,7 +772,7 @@ def solve_cholesky_banded_matrix(banded_matrix, vector, m):
             y[i][0] = (vector[i][0] - sum(L[i][k] * y[k][0] for k in range(max(0, i - m + 1), i))) / L[i][i]
 
         except ZeroDivisionError:
-            raise DivisionByZeroException({"message": "La matrice est divergente."})
+            raise DivisionByZeroException({"message": "La matrice admet un zero dans la diagonale."})
         
     # Résoudre L^Tx = y en utilisant la substitution arrière
     result = [[0.0] for _ in range(matrix_rows)]  # Initialize x as a column vector
@@ -825,7 +825,7 @@ def solve_jacobi(matrix, vector, epsilon, max_iteration):
     # Testing the convergence of the matrix
     eigenvalue, vectors = np.linalg.eig(matrix)
     if max(eigenvalue) >= 1:
-        raise ConvergenceMatrixException({"message": "The matrix is divergent"})
+        raise ConvergenceMatrixException({"message": "La matrice est divergente."})
 
     # solving matrix
     while True:
@@ -840,11 +840,9 @@ def solve_jacobi(matrix, vector, epsilon, max_iteration):
                     s -= matrix[i][j] * x[j][0]
 
             y[i][0] = s / matrix[i][i]
-            print(y)
+
         counter += 1
         if max(abs(x[0] - y[0]) for y, x in zip(y, x)) < epsilon or counter == 1:
             break
-    
-    print(y)
-        
+            
     return y
