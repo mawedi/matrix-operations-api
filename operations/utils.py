@@ -543,9 +543,14 @@ def lu_decomposition_dense(matrix):
         # Calcul de la matrice L
         for j in range(i+1, matrix_rows):
             sum_lower = sum(L[j][k] * U[k][i] for k in range(i))
-            L[j][i] = (matrix[j][i] - sum_lower) / U[i][i]
+            try:
+                L[j][i] = (matrix[j][i] - sum_lower) / U[i][i]
+
+            except ZeroDivisionError:
+                raise DivisionByZeroException({"message": "La matrice admet un zero dans la diagonale."})
 
     return L, U
+
 
 def solve_symmetric_dense_matrix_LU(matrix, vector):
     L, U = lu_decomposition_dense(matrix)
@@ -826,7 +831,7 @@ def solve_jacobi(matrix, vector, epsilon, max_iteration):
     eigenvalue, vectors = np.linalg.eig(matrix)
     if max(eigenvalue) >= 1:
         raise ConvergenceMatrixException({"message": "La matrice est divergente."})
-
+       
     # solving matrix
     while True:
         for i in range(matrix_rows):

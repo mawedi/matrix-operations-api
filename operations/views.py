@@ -367,6 +367,9 @@ class SolveMatrixAPIView(APIView):
                 return Response({"message": "epsilon or max iteration must be provided."})
             result = solve_gauss_seidel(matrix, vector, epsilon, max_iteration)
         
+        else:
+            return Response({"message": "The informations are not provided correctly."}, status=status.HTTP_400_BAD_REQUEST)
+        
         # Saving the result
         data = {
             'first_matrix': matrix,
