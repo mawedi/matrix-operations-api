@@ -787,7 +787,39 @@ def solve_cholesky_banded_matrix(banded_matrix, vector, m):
     return result
 
 
-def solve_gauss_seidel(matrix, vector, epsilon, max_iteration):
+def solve_gauss_seidel_with_epsilon(matrix, vector, epsilon):
+    # Initialization of max, result and counter
+    maximum = 0
+    matrix_rows = len(matrix)
+    y = [[0] for _ in range(matrix_rows)]
+
+    # Testing the convergence of the matrix
+    eigenvalue, vectors = np.linalg.eig(matrix)
+    if max(eigenvalue) >= 1:
+        raise ConvergenceMatrixException({"message": "La matrice est divergente."})
+
+    # Solving matrix
+    while True:
+        for i in range(matrix_rows):
+            s = 0
+
+            for j in range(matrix_rows):
+                if j != i:
+                    s += matrix[i][j] * y[j][0]
+            
+            s = (vector[i][0] - s) / matrix[i][i]
+            if maximum < (abs_result := abs(y[i][0] - s)):
+                maximum = abs_result
+            
+            y[i][0] = s
+        
+        if maximum > epsilon:
+            break
+
+    return y
+
+
+def solve_gauss_seidel_with_max_iteration(matrix, vector, max_iteration):
     # Initialization of max, result and counter
     maximum = 0
     matrix_rows = len(matrix)
@@ -808,21 +840,51 @@ def solve_gauss_seidel(matrix, vector, epsilon, max_iteration):
                 if j != i:
                     s += matrix[i][j] * y[j][0]
             
-            s = (s - vector[i][0]) / matrix[i][i]
-
+            s = (vector[i][0] - s) / matrix[i][i]
             if maximum < (abs_result := abs(y[i][0] - s)):
                 maximum = abs_result
             
             y[i][0] = s
-            
-        counter += 1
-        if maximum > epsilon or counter == max_iteration:
-            break
         
+        counter += 1
+        if counter == max_iteration:
+            break
+
     return y
 
 
-def solve_jacobi(matrix, vector, epsilon, max_iteration):
+def solve_jacobi_with_epsilon(matrix, vector, epsilon):
+    # Initialization of result and counter
+    matrix_rows = len(matrix)
+    x = [[0] for _ in range(matrix_rows)]
+    y = [[0] for _ in range(matrix_rows)]
+
+    # Testing the convergence of the matrix
+    eigenvalue, vectors = np.linalg.eig(matrix)
+    if max(eigenvalue) >= 1:
+        raise ConvergenceMatrixException({"message": "La matrice est divergente."})
+       
+    # solving matrix
+    while True:
+        for i in range(matrix_rows):
+            x[i][0] = y[i][0]
+
+        for i in range(matrix_rows):
+            s = vector[i][0]
+
+            for j in range(matrix_rows):
+                if i != j:
+                    s -= matrix[i][j] * x[j][0]
+
+            y[i][0] = s / matrix[i][i]
+
+        if max(abs(x[0] - y[0]) for y, x in zip(y, x)) > epsilon:
+            break
+            
+    return y
+
+
+def solve_jacobi_with_max_iteration(matrix, vector, max_iteration):
     # Initialization of result and counter
     matrix_rows = len(matrix)
     x = [[0] for _ in range(matrix_rows)]
@@ -849,7 +911,7 @@ def solve_jacobi(matrix, vector, epsilon, max_iteration):
             y[i][0] = s / matrix[i][i]
 
         counter += 1
-        if max(abs(x[0] - y[0]) for y, x in zip(y, x)) < epsilon or counter == 1:
+        if counter == max_iteration:
             break
             
     return y

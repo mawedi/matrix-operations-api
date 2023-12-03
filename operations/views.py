@@ -358,14 +358,20 @@ class SolveMatrixAPIView(APIView):
             result = solve_dense_matrix_pivot_partiel_gauss(matrix, vector)
             
         elif algorithm == JACOBI:
-            if epsilon < 0 and max_iteration <= 0:
+            if epsilon < 0 and max_iteration > 1:
+                result = solve_jacobi_with_max_iteration(matrix, vector, max_iteration)
+            elif epsilon > 0 and max_iteration <= 0:
+                result = solve_jacobi_with_epsilon(matrix, vector, epsilon)
+            else:
                 return Response({"message": "epsilon or max iteration must be provided."})
             
-            result = solve_jacobi(matrix, vector, epsilon, max_iteration)
         elif algorithm == GAUSS_SEIDEL:
-            if epsilon < 0 and max_iteration <= 0:
+            if epsilon < 0 and max_iteration > 1:
+                result = solve_gauss_seidel_with_max_iteration(matrix, vector, max_iteration)
+            elif epsilon > 0 and max_iteration <= 0:
+                result = solve_gauss_seidel_with_epsilon(matrix, vector, epsilon)
+            else:
                 return Response({"message": "epsilon or max iteration must be provided."})
-            result = solve_gauss_seidel(matrix, vector, epsilon, max_iteration)
         
         else:
             return Response({"message": "The informations are not provided correctly."}, status=status.HTTP_400_BAD_REQUEST)
