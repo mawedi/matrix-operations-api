@@ -311,10 +311,10 @@ class SolveMatrixAPIView(APIView):
         vector = request.data.get('vector')
         matrix_type = request.data.get('matrix_type', None)
         algorithm = request.data.get('algorithm', None)
-        max_iteration = request.data.get('max_iteration', 0)
+        max_iteration = int(request.data.get('max_iteration', 0))
         m = int(request.data.get('m', 0))
-        epsilon = request.data.get('epsilon', -1)
-
+        epsilon = float(request.data.get('epsilon', -1))
+        
         # Verificatino of the matrix form
         serializer_matrix_instance = MatrixSerializer(data={'matrix': matrix})
         if not(serializer_matrix_instance.is_valid()): 
