@@ -832,7 +832,7 @@ def solve_gauss_seidel_with_max_iteration(matrix, vector, max_iteration):
         raise ConvergenceMatrixException({"message": "La matrice est divergente."})
 
     # Solving matrix
-    while True:
+    for k in range(max_iteration):
         for i in range(matrix_rows):
             s = 0
 
@@ -845,10 +845,6 @@ def solve_gauss_seidel_with_max_iteration(matrix, vector, max_iteration):
                 maximum = abs_result
             
             y[i][0] = s
-        
-        counter += 1
-        if counter == max_iteration:
-            break
 
     return y
 
@@ -897,7 +893,7 @@ def solve_jacobi_with_max_iteration(matrix, vector, max_iteration):
         raise ConvergenceMatrixException({"message": "La matrice est divergente."})
        
     # solving matrix
-    while True:
+    for k in range(max_iteration):
         for i in range(matrix_rows):
             x[i][0] = y[i][0]
 
@@ -909,9 +905,5 @@ def solve_jacobi_with_max_iteration(matrix, vector, max_iteration):
                     s -= matrix[i][j] * x[j][0]
 
             y[i][0] = s / matrix[i][i]
-
-        counter += 1
-        if counter == max_iteration:
-            break
             
     return y
