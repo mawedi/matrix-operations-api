@@ -4,7 +4,8 @@ from .exceptions import (
     DivisionByZeroException,
     PositiveMatrixException,
     ConvergenceMatrixException,
-    FundamentalMinorsIncludeZero
+    FundamentalMinorsIncludeZero,
+    SingularMatrixException
 )
 
 # Matrix addition
@@ -787,6 +788,33 @@ def solve_cholesky_banded_matrix(banded_matrix, vector, m):
     return result
 
 
+def set_matrix_gauss_seidel(matrix):
+    # Getting matrix rows and matrix columns
+    matrix_rows = len(matrix)
+    matrix_columns = len(matrix[0])
+    
+    # Inialization of jacobi matrix
+    matrix_used = [[0.0 for _ in range(matrix_columns)] for _ in range(matrix_rows)]
+    F = [[0.0 for _ in range(matrix_columns)] for _ in range(matrix_rows)]
+    for i in range(matrix_rows):
+        for j in range(0, i + 1):
+            matrix_used[i][j] = matrix[i][j]
+        
+        for j in range(i + 1, matrix_columns):
+            F[i][j] = matrix[i][j]
+    
+    try:
+        matrix_used_inverse = np.linalg.inv(matrix_used)
+    
+    except np.linalg.LinAlgError:
+        raise SingularMatrixException({"message": "La matrice utilise pour obtenir la matrice gauss seidel n'est pas inversible."})
+
+    seidel_matrix = multiply_dense_dense(matrix_used_inverse, F)
+
+    return seidel_matrix
+    
+
+
 def solve_gauss_seidel_with_epsilon(matrix, vector, epsilon):
     # Initialization of max, result and counter
     maximum = 0
@@ -794,7 +822,8 @@ def solve_gauss_seidel_with_epsilon(matrix, vector, epsilon):
     y = [[0] for _ in range(matrix_rows)]
 
     # Testing the convergence of the matrix
-    eigenvalue, vectors = np.linalg.eig(matrix)
+    seidel_matrix = set_matrix_gauss_seidel(matrix)
+    eigenvalue, vectors = np.linalg.eig(seidel_matrix)
     if max(eigenvalue) >= 1:
         raise ConvergenceMatrixException({"message": "La matrice est divergente."})
 
@@ -827,7 +856,8 @@ def solve_gauss_seidel_with_max_iteration(matrix, vector, max_iteration):
     counter = 0
 
     # Testing the convergence of the matrix
-    eigenvalue, vectors = np.linalg.eig(matrix)
+    seidel_matrix = set_matrix_gauss_seidel(matrix)
+    eigenvalue, vectors = np.linalg.eig(seidel_matrix)
     if max(eigenvalue) >= 1:
         raise ConvergenceMatrixException({"message": "La matrice est divergente."})
 
@@ -849,6 +879,22 @@ def solve_gauss_seidel_with_max_iteration(matrix, vector, max_iteration):
     return y
 
 
+def set_matrix_jacobi(matrix):
+    # Getting matrix rows and matrix columns
+    matrix_rows = len(matrix)
+    matrix_columns = len(matrix[0])
+
+    # Inialization of jacobi matrix
+    jacobi_matrix = [[0.0 for _ in range(matrix_columns)] for _ in range(matrix_rows)]
+
+    for i in range(matrix_rows):
+        for j in range(matrix_columns):
+            if i != j:
+                jacobi_matrix[i][j] = - (matrix[i][j] / matrix[i][i])
+
+    return jacobi_matrix
+
+
 def solve_jacobi_with_epsilon(matrix, vector, epsilon):
     # Initialization of result and counter
     matrix_rows = len(matrix)
@@ -856,7 +902,8 @@ def solve_jacobi_with_epsilon(matrix, vector, epsilon):
     y = [[0] for _ in range(matrix_rows)]
 
     # Testing the convergence of the matrix
-    eigenvalue, vectors = np.linalg.eig(matrix)
+    jacobi_matrix = set_matrix_jacobi(matrix)
+    eigenvalue, vectors = np.linalg.eig(jacobi_matrix)
     if max(eigenvalue) >= 1:
         raise ConvergenceMatrixException({"message": "La matrice est divergente."})
        
@@ -888,7 +935,8 @@ def solve_jacobi_with_max_iteration(matrix, vector, max_iteration):
     counter = 0
 
     # Testing the convergence of the matrix
-    eigenvalue, vectors = np.linalg.eig(matrix)
+    jacobi_matrix = set_matrix_jacobi(matrix)
+    eigenvalue, vectors = np.linalg.eig(jacobi_matrix)
     if max(eigenvalue) >= 1:
         raise ConvergenceMatrixException({"message": "La matrice est divergente."})
        
