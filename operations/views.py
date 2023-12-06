@@ -1,3 +1,12 @@
+from django.core.mail import send_mail
+from django.shortcuts import render
+from django.conf import settings
+from django.template.loader import get_template
+
+import requests
+
+import json
+
 from rest_framework.generics import (
     RetrieveAPIView
 )
@@ -410,3 +419,76 @@ class TransposeMatrixAPIView(APIView):
             result_instance = serializer_result_instance.save()
         
         return Response({'_id': result_instance._id}, status=status.HTTP_201_CREATED) 
+
+
+class SendEmailAPIView(APIView):
+    permission_classes = [AllowAny, ]
+    authentication_classes = []
+
+    API_KEYS = [
+        "https://emailvalidation.abstractapi.com/v1/?api_key=7240d2707e0c48aab51259e4d19b78e2&email=",
+        "https://emailvalidation.abstractapi.com/v1/?api_key=617b041537f74fd3bc05020743e7d73d&email=",
+        "https://emailvalidation.abstractapi.com/v1/?api_key=f699e39e0e4a41329cf106ffc8d4a0dc&email=",
+        "https://emailvalidation.abstractapi.com/v1/?api_key=7dc65ad406214fc584fed69045cd35f0&email=",
+    ]
+
+    def verify_email(self, email):
+        response = requests.get(f'{self.API_KEYS[0]}{email}')
+        content = json.loads(response.content)
+        if response.status_code == status.HTTP_200_OK:
+            if content['deliverability'] == 'UNDELIVERABLE':
+                return False
+        
+        elif response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY:
+            self.API_KEYS.pop(0)
+            self.verify_email(email)
+        
+        return True
+
+    def post(self, request, *args, **kwargs):
+        # Setting subject and message to send to user
+        subject = "Vos précieux commentaires - Aidez-nous à améliorer votre expérience sur notre site Web"
+        feedback = request.data.get('message', "")
+        email_sender = request.data.get('email', "")
+        first_name = request.data.get('first_name', "")
+        last_name = request.data.get('last_name', "")
+
+        data_to_send = {
+            "email": email_sender,
+            "first_name": first_name,
+            "last_name": last_name,
+            "feedback": feedback
+        }
+        
+        # Checking the email if exists
+        try:
+            checking_result = self.verify_email(email_sender)
+            if checking_result is False:
+                return Response({"message": "Vérifiez votre adresse e-mail!"}, status=status.HTTP_400_BAD_REQUEST)
+
+        except IndexError:
+            pass
+        
+        # Sending an email to the user who provides the feedback
+        html_content = render(request, 'operations/sender.html', context=data_to_send).content.decode('utf-8')
+        result_sending = send_mail(
+            subject,
+            feedback,
+            settings.EMAIL_HOST_USER,
+            [email_sender],
+            html_message=html_content,
+            fail_silently=False
+        )
+
+        # Sending the feedback to the group
+        html_content = render(request, 'operations/receiver.html', context=data_to_send).content.decode('utf-8')
+        result_sending = send_mail(
+            subject,
+            feedback,
+            settings.EMAIL_HOST_USER,
+            settings.EMAILS_RECEIVERS,
+            html_message=html_content,
+            fail_silently=False
+        )
+        
+        return Response(status=status.HTTP_200_OK)
