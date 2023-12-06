@@ -24,10 +24,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-x)))fu5ejno1+35q6qj0#js@z=hyrbp8-aqv33yi8($upv4joy'
+SECRET_KEY = confi.get("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = ['matrixoperationsapi-production.up.railway.app', '127.0.0.1', '192.168.1.18']
 
