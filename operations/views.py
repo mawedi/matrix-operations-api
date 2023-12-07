@@ -436,10 +436,10 @@ class SendEmailAPIView(APIView):
     authentication_classes = []
 
     API_KEYS = [
-        "https://emailvalidation.abstractapi.com/v1/?api_key=7240d2707e0c48aab51259e4d19b78e2&email=",
-        "https://emailvalidation.abstractapi.com/v1/?api_key=617b041537f74fd3bc05020743e7d73d&email=",
+        "https://emailvalidation.abstractapi.com/v1/?api_key=617b041537f74fd3bc05020743e7d73d&email",
         "https://emailvalidation.abstractapi.com/v1/?api_key=f699e39e0e4a41329cf106ffc8d4a0dc&email=",
         "https://emailvalidation.abstractapi.com/v1/?api_key=7dc65ad406214fc584fed69045cd35f0&email=",
+        "https://emailvalidation.abstractapi.com/v1/?api_key=7240d2707e0c48aab51259e4d19b78e2&email=",
     ]
 
     def verify_email(self, email):
