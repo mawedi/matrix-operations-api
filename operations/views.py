@@ -39,6 +39,8 @@ from .utils import *
 from .types import *
 import numpy as np
 
+from .ipaddress import IP_ADDRESS
+
 # Create your views here.
 class RetrieveMatrixOperationAPIView(RetrieveAPIView):
     permission_classes = [AllowAny, ]
@@ -84,6 +86,9 @@ class MultiplyMatrixAPIView(APIView):
         second_matrix_type = request.data.get('second_matrix_type', None)
         m_first_matrix = int(request.data.get('m_first_matrix', 0))
         m_second_matrix = int(request.data.get('m_second_matrix', 0))
+
+        # Appending the ip address
+        IP_ADDRESS.append(request.META.get('REMOTE_ADDR'))
         
         if first_matrix_type is None or second_matrix_type is None:
             return Response({"message": "Types of matrix are missing!"}, status=status.HTTP_400_BAD_REQUEST)
@@ -163,6 +168,8 @@ class AddMatrixAPIView(APIView):
         first_matrix = request.data.get('first_matrix')
         second_matrix = request.data.get('second_matrix')
 
+        # Appending the ip address
+        IP_ADDRESS.append(request.META.get('REMOTE_ADDR'))
         # Verification of the matrix form
         serializer_instance_first_matrix = MatrixSerializer(data={'matrix': first_matrix})
         if not(serializer_instance_first_matrix.is_valid(raise_exception=True)):
@@ -199,6 +206,9 @@ class SubstractMatrixAPIView(APIView):
         first_matrix = request.data.get('first_matrix')
         second_matrix = request.data.get('second_matrix')
 
+        # Appending the ip address
+        IP_ADDRESS.append(request.META.get('REMOTE_ADDR'))
+
         # Verificatino of the matrix form
         serializer_instance_first_matrix = MatrixSerializer(data={'matrix': first_matrix})
         if not(serializer_instance_first_matrix.is_valid(raise_exception=True)):
@@ -234,6 +244,9 @@ class InverseMatrixAIPView(APIView):
         # Getting the data from the request
         matrix = request.data.get('matrix')
 
+        # Appending the ip address
+        IP_ADDRESS.append(request.META.get('REMOTE_ADDR'))
+
         # Verificatino of the matrix form
         serializer_instance_matrix = MatrixSerializer(data={'matrix': matrix})
         if not (serializer_instance_matrix.is_valid(raise_exception=True)):
@@ -265,6 +278,9 @@ class DeterminantMatrixAPIView(APIView):
     def post(self, request, *args, **kwargs):
         # Getting the data from the request
         matrix = request.data.get('matrix')
+
+        # Appending the ip address
+        IP_ADDRESS.append(request.META.get('REMOTE_ADDR'))
         
         # Verification of the matrix form
         serializer_matrix_instance = MatrixSerializer(data={'matrix': matrix})
@@ -294,6 +310,9 @@ class RankMatrixAPIView(APIView):
     def post(self, request, *args, **kwargs): 
         # Getting the data from the request
         matrix = request.data.get('matrix')
+
+        # Appending the ip address
+        IP_ADDRESS.append(request.META.get('REMOTE_ADDR'))
         
         # Verification of the matrix form
         serializer_matrix_instance = MatrixSerializer(data={'matrix': matrix})
@@ -313,7 +332,7 @@ class RankMatrixAPIView(APIView):
 class SolveMatrixAPIView(APIView):
     permission_classes = [AllowAny, ]
     authentication_classes = []
-
+    
     def post(self, request, *args, **kwargs):
         # Getting the data from the request
         matrix = request.data.get('matrix')
@@ -323,6 +342,9 @@ class SolveMatrixAPIView(APIView):
         max_iteration = int(request.data.get('max_iteration', 0))
         m = int(request.data.get('m', 0))
         epsilon = float(request.data.get('epsilon', -1))
+        
+        # Appending the ip address
+        IP_ADDRESS.append(request.META.get('REMOTE_ADDR'))
         
         # Verificatino of the matrix form
         serializer_matrix_instance = MatrixSerializer(data={'matrix': matrix})
@@ -406,6 +428,9 @@ class TransposeMatrixAPIView(APIView):
         # Getting the data from the request
         matrix = request.data.get('matrix')
 
+        # Appending the ip address
+        IP_ADDRESS.append(request.META.get('REMOTE_ADDR'))
+
         serializer_matrix_instance = MatrixSerializer(data={'matrix': matrix})
         serializer_matrix_instance.is_valid(raise_exception=True)
         
@@ -453,6 +478,9 @@ class SendEmailAPIView(APIView):
         first_name = request.data.get('first_name', "")
         last_name = request.data.get('last_name', "")
 
+        # Appending the ip address
+        IP_ADDRESS.append(request.META.get('REMOTE_ADDR'))
+
         data_to_send = {
             "email": email_sender,
             "first_name": first_name,
@@ -492,3 +520,14 @@ class SendEmailAPIView(APIView):
         )
         
         return Response(status=status.HTTP_200_OK)
+
+
+class listIpAddress(APIView):
+    permission_classes = [AllowAny, ]
+    authentication_classes = []
+
+    def get(self, request, *args, **kwargs):
+        data = {
+            'ip_address': IP_ADDRESS
+        }
+        return Response(data, status=status.HTTP_200_OK)
