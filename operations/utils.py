@@ -240,11 +240,12 @@ def multiply_dense_vector(dense_matrix, vector):
     # Vector initialization
     rows_dense_matrix = len(dense_matrix)
     columns_dense_matrix = len(dense_matrix[0])
-    result = [[] for _ in range(rows_dense_matrix)]
+    result = [[0.0] for _ in range(rows_dense_matrix)]
     
     # Calculation
     for i in range(0, rows_dense_matrix):
-        result[i][0] = [sum(dense_matrix[i][j] * vector[j]) for j in range(columns_dense_matrix)]
+        for j in range(columns_dense_matrix):
+            result[i][0] += dense_matrix[i][j] * vector[j][0]
 
     return result
 
