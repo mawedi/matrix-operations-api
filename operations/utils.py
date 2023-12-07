@@ -271,7 +271,8 @@ def multiply_lower_vector(lower_matrix, vector):
 
     # Calculation
     for i in range(rows_upper_matrix):
-        result[i][0] = sum(lower_matrix[i][j] * vector[j][0] for j in range(i))
+        for j in range(i + 1):
+            result[i][0] += lower_matrix[i][j] * vector[j][0]
 
     return result
 
@@ -285,11 +286,11 @@ def multiply_lower_banded_vector(lower_banded, vector, m):
 
     # Calculation
     for i in range(length_first_case_in_matrix):
-        for j in range(i):
+        for j in range(i + 1):
             result[i][0] += lower_banded[i][j] * vector[j][0]
     
     for i in range(length_second_case_begining_in_matrix, rows_lower_banded):
-        for j in range(i - m, i):
+        for j in range(i - m, i + 1):
             result[i][0] += lower_banded[i][j] * vector[j][0]
     
     return result
@@ -304,7 +305,7 @@ def multiply_upper_banded_vector(upper_banded, vector, m):
 
     # Calculation
     for i in range(length_first_case_in_matrix): 
-        for j in range(i, m + i):
+        for j in range(i, m + i + 1):
             result[i][0] += upper_banded[i][j] * vector[j][0]
     
     for i in range(length_second_case_begining_in_matrix, rows_upper_banded):
