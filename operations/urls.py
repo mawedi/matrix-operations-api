@@ -23,6 +23,5 @@ urlpatterns = [
     path('inverse/<str:_id>/', RetrieveMatrixInverseTransposeAPIView.as_view(), name='retrive-matrix-inverse'),
     path('transpose/<str:_id>/', RetrieveMatrixInverseTransposeAPIView.as_view(), name='retrive-matrix-transpose'),
 
-    path('send-email/', SendEmailAPIView.as_view(), name='send-email'),
-    path('ip-address/', listIpAddress.as_view(), name='listing-ip-address')
+    path('send-email/', SendEmailAPIView.as_view(), name='send-email')
 ]
