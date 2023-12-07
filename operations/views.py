@@ -85,7 +85,6 @@ class MultiplyMatrixAPIView(APIView):
         m_first_matrix = int(request.data.get('m_first_matrix', 0))
         m_second_matrix = int(request.data.get('m_second_matrix', 0))
 
-        
         if first_matrix_type is None or second_matrix_type is None:
             return Response({"message": "Types of matrix are missing!"}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -93,54 +92,58 @@ class MultiplyMatrixAPIView(APIView):
         serializer_instance_first_matrix = MatrixSerializer(data={'matrix': first_matrix})
         if not(serializer_instance_first_matrix.is_valid(raise_exception=True)):
             return Response({"message": "Wrong Data!"}, status=status.HTTP_400_BAD_REQUEST)
-
+        
+        first_matrix = serializer_instance_first_matrix.validated_data.get('matrix')
+            
         # Calculating the inverse of the matrix or the transpose considering the type provided
+        result = None
         if second_matrix is None:
             if second_matrix_type == INVERSE:
-                second_matrix = inverse_gauss_jordan(first_matrix)
-
+                second_matrix = np.linalg.inv(first_matrix)
+                result = multiply_banded_matrix_inverse(first_matrix, second_matrix, m_first_matrix)
+                
             elif second_matrix_type == TRANSPOSE:
                 second_matrix = transpose_banded_matrix(first_matrix)
-        
+                result = multiply_banded_matrix_transpose(first_matrix, m_first_matrix)
+            
         else:
             serializer_instance_second_matrix = MatrixSerializer(data={'matrix': second_matrix})
             if not(serializer_instance_second_matrix.is_valid(raise_exception=True)):
                 return Response({"message": "Wrong Data!"}, status=status.HTTP_400_BAD_REQUEST)
-            
+        
             second_matrix = serializer_instance_second_matrix.validated_data.get('matrix')
-        first_matrix = serializer_instance_first_matrix.validated_data.get('matrix')
         
         # Calculating the matrix considering their types
-        if first_matrix_type == UPPER_MATRIX and second_matrix_type == LOWER_MATRIX:
-            result = multiply_upper_lower_triangular(first_matrix, second_matrix)
-        elif first_matrix_type == UPPER_MATRIX and second_matrix_type == DENSE_MATRIX:
-            result = multiply_upper_triangular_dense(first_matrix, second_matrix)
-        elif first_matrix_type == LOWER_MATRIX and second_matrix_type == DENSE_MATRIX:
-            result = multiply_lower_triangular_dense(first_matrix, second_matrix)
-        elif first_matrix_type == BANDED_MATRIX and second_matrix_type == LOWER_BANDED_MATRIX:
-            result = multiply_banded_lower_banded_matrix(first_matrix, second_matrix, m_first_matrix)
-        elif first_matrix_type == LOWER_BANDED_MATRIX and second_matrix_type == UPPER_BANDED_MATRIX:
-            result = multiply_lower_banded_upper_banded_matrix(first_matrix, second_matrix, m_first_matrix, m_second_matrix)
+        if result is None:
+            if first_matrix_type == UPPER_MATRIX and second_matrix_type == LOWER_MATRIX:
+                result = multiply_upper_lower_triangular(first_matrix, second_matrix)
+            elif first_matrix_type == UPPER_MATRIX and second_matrix_type == DENSE_MATRIX:
+                result = multiply_upper_triangular_dense(first_matrix, second_matrix)
+            elif first_matrix_type == LOWER_MATRIX and second_matrix_type == DENSE_MATRIX:
+                result = multiply_lower_triangular_dense(first_matrix, second_matrix)
+            elif first_matrix_type == BANDED_MATRIX and second_matrix_type == LOWER_BANDED_MATRIX:
+                result = multiply_banded_lower_banded_matrix(first_matrix, second_matrix, m_first_matrix)
+            elif first_matrix_type == LOWER_BANDED_MATRIX and second_matrix_type == UPPER_BANDED_MATRIX:
+                result = multiply_lower_banded_upper_banded_matrix(first_matrix, second_matrix, m_first_matrix, m_second_matrix)
+                
+            elif first_matrix_type == BANDED_MATRIX and second_matrix_type == DENSE_MATRIX:
+                result = multiply_banded_dense(first_matrix, second_matrix, m_first_matrix)
+            elif first_matrix_type == LOWER_BANDED_MATRIX and second_matrix_type == DENSE_MATRIX:
+                result = multiply_lower_banded_dense(first_matrix, second_matrix, m_first_matrix)
             
-        elif first_matrix_type == BANDED_MATRIX and second_matrix_type == DENSE_MATRIX:
-            result = multiply_banded_dense(first_matrix, second_matrix, m_first_matrix)
-        elif first_matrix_type == LOWER_BANDED_MATRIX and second_matrix_type == DENSE_MATRIX:
-            result = multiply_lower_banded_dense(first_matrix, second_matrix, m_first_matrix)
-        
-
-        # Vector multiplication    
-        elif first_matrix_type == DENSE_MATRIX and second_matrix == VECTOR:
-            result = multiply_dense_vector(first_matrix, second_matrix)
-        elif first_matrix_type == LOWER_MATRIX and second_matrix_type == VECTOR:
-            result = multiply_lower_vector(first_matrix, second_matrix)
-        elif first_matrix_type == UPPER_MATRIX and second_matrix_type == VECTOR:
-            result = multiply_upper_vector(first_matrix, second_matrix)
-        elif first_matrix_type == LOWER_BANDED_MATRIX and second_matrix_type == VECTOR:
-            result = multiply_lower_banded_vector(first_matrix, second_matrix, m_first_matrix)
-        elif first_matrix_type == UPPER_BANDED_MATRIX and second_matrix_type == VECTOR:
-            result = multiply_upper_banded_vector(first_matrix, second_matrix, m_first_matrix)
-        else:
-            result = multiply_dense_dense(first_matrix, second_matrix)
+            # Vector multiplication    
+            elif first_matrix_type == DENSE_MATRIX and second_matrix_type == VECTOR:
+                result = multiply_dense_vector(first_matrix, second_matrix)
+            elif first_matrix_type == LOWER_MATRIX and second_matrix_type == VECTOR:
+                result = multiply_lower_vector(first_matrix, second_matrix)
+            elif first_matrix_type == UPPER_MATRIX and second_matrix_type == VECTOR:
+                result = multiply_upper_vector(first_matrix, second_matrix)
+            elif first_matrix_type == LOWER_BANDED_MATRIX and second_matrix_type == VECTOR:
+                result = multiply_lower_banded_vector(first_matrix, second_matrix, m_first_matrix)
+            elif first_matrix_type == UPPER_BANDED_MATRIX and second_matrix_type == VECTOR:
+                result = multiply_upper_banded_vector(first_matrix, second_matrix, m_first_matrix)
+            else:
+                result = multiply_dense_dense(first_matrix, second_matrix)
 
         # Saving the result
         data = {

@@ -177,23 +177,36 @@ def multiply_banded_matrix_transpose(banded_matrix, m):
     return result
 
 
+def multiply_row(matrix, row_index, scalar):
+    matrix[row_index] = [element * scalar for element in matrix[row_index]]
+
+
 def inverse_gauss_jordan(matrix):
-    n = len(matrix)
-    identite = np.identity(n)
+    matrix_rows = len(matrix)
+    identite = np.identity(matrix_rows)
     augmente = np.concatenate((matrix, identite), axis=1)
+    column_matrix = len(augmente[0])
 
-    for i in range(n):
-        pivot = augmente[i][i]
-        augmente[i] = augmente[i] / pivot  # Utilisation de la division entière
+    for i in range(matrix_rows):
+        r = i
+        for j in range(i, matrix_rows):
+            if abs(augmente[i][i] < abs(augmente[j][i])):
+                r = j
+        
+        if r != i:
+            augmente[i], augmente[r] = augmente[r], augmente[i]
+        
+        pivot = 1 / augmente[i][i]
+        multiply_row(augmente, i, pivot)
+        for j in range(matrix_rows):
+            if j != i:
+                pivot = augmente[j][i]
 
-        for j in range(n):
-            if i != j:
-                coef = augmente[j][i]
-                augmente[j] = augmente[j] - coef * augmente[i]
-
-    matrix_inverse = augmente[:, n:]
-
-    return matrix_inverse
+                for k in range(column_matrix):
+                    augmente[j][k] = augmente[j][k] - pivot * augmente[i][k]
+        
+        inverse_matrix = [row[(-column_matrix // 2):] for row in augmente]
+        return inverse_matrix
 
 
 def multiply_banded_matrix_inverse(banded_matrix, matrix_inverse, m):
@@ -240,11 +253,12 @@ def multiply_upper_vector(upper_matrix, vector):
     # Vector initialization
     rows_upper_matrix = len(upper_matrix)
     columns_upper_matrix = len(upper_matrix[0])
-    result = [0] * rows_upper_matrix
+    result = [[0.0] for _ in range(rows_upper_matrix)]
 
     # Calculation
     for i in range(rows_upper_matrix):
-        result[i] = sum(upper_matrix[i][j] * vector[j] for j in range(i, columns_upper_matrix))
+        for j in range(i, columns_upper_matrix):
+            result[i][0] += upper_matrix[i][j] * vector[j][0]
 
     return result
 
@@ -266,14 +280,16 @@ def multiply_lower_banded_vector(lower_banded, vector, m):
     rows_lower_banded = len(lower_banded)
     length_first_case_in_matrix = rows_lower_banded - m
     length_second_case_begining_in_matrix = rows_lower_banded - m + 1
-    result = [[]  for _ in range(rows_lower_banded)]
+    result = [[0.0]  for _ in range(rows_lower_banded)]
 
     # Calculation
     for i in range(length_first_case_in_matrix):
-        result[i] = [sum(lower_banded[i][j] * vector[j]) for j in range(i)]
+        for j in range(i):
+            result[i][0] += lower_banded[i][j] * vector[j][0]
     
     for i in range(length_second_case_begining_in_matrix, rows_lower_banded):
-        result[i] = [sum(lower_banded[i][j] * vector[j]) for j in range(i - m, i)]
+        for j in range(i - m, i):
+            result[i][0] += lower_banded[i][j] * vector[j][0]
     
     return result
 
@@ -283,15 +299,17 @@ def multiply_upper_banded_vector(upper_banded, vector, m):
     rows_upper_banded = len(upper_banded)
     length_first_case_in_matrix = rows_upper_banded - m
     length_second_case_begining_in_matrix = rows_upper_banded - m + 1
-    result = [[] for _ in range(rows_upper_banded)]
+    result = [[0.0] for _ in range(rows_upper_banded)]
 
     # Calculation
     for i in range(length_first_case_in_matrix): 
-        result[i] = [sum(upper_banded[i][j] * vector[j]) for j in range(i, m + i)]
+        for j in range(i, m + i):
+            result[i][0] += upper_banded[i][j] * vector[j][0]
     
     for i in range(length_second_case_begining_in_matrix, rows_upper_banded):
-        result[i] = [sum(upper_banded[i][j] * vector[j]) for j in range(i, rows_upper_banded)]
-    
+        for j in range(i, rows_upper_banded):
+            result[i] += upper_banded[i][j] * vector[j][0]
+
     return result
 
 
