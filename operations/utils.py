@@ -300,7 +300,7 @@ def multiply_upper_banded_vector(upper_banded, vector, m):
     # Vector initialization
     rows_upper_banded = len(upper_banded)
     length_first_case_in_matrix = rows_upper_banded - m
-    length_second_case_begining_in_matrix = rows_upper_banded - m + 1
+    length_second_case_begining_in_matrix = rows_upper_banded - m 
     result = [[0.0] for _ in range(rows_upper_banded)]
 
     # Calculation
