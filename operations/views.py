@@ -460,7 +460,7 @@ class SendEmailAPIView(APIView):
         subject = "Vos précieux commentaires - Aidez-nous à améliorer votre expérience sur notre site Web"
         feedback = request.data.get('message', "")
         email_sender = request.data.get('email', "")
-        first_name = request.data.get('first_name', "")
+        first_name = request.data.get('fisrt_name', "")
         last_name = request.data.get('last_name', "")
 
 
