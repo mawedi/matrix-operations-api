@@ -1,1 +1,1 @@
-web: gunicorn -w 4 matrix.wsgi
+web: gunicorn -w 8 matrix.wsgi
