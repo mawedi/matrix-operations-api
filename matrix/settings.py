@@ -99,8 +99,7 @@ DATABASES = {
         'USER': confi.get("DB_USER"),
         'PASSWORD': confi.get("DB_PASSWORD"),
         'HOST': confi.get("DB_HOST"),
-        'PORT': confi.get("DB_PROT")
-    }
+        'OPTIONS': {'sslmode': 'require'},    }
 }
 
 
