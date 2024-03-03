@@ -29,7 +29,7 @@ SECRET_KEY = confi.get("SECRET_KEY")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = ['matrixoperationsapi-git-main-mawedis-projects.vercel.app', 'matrixoperationsapi-production.up.railway.app', '127.0.0.1', '192.168.1.18']
+ALLOWED_HOSTS = ['.vercel.app', 'matrixoperationsapi-production.up.railway.app', '127.0.0.1', '192.168.1.18']
 
 # Application definition
 INSTALLED_APPS = [
