@@ -29,7 +29,7 @@ SECRET_KEY = confi.get("SECRET_KEY")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = ['matrixoperationsapi-production.up.railway.app', '127.0.0.1', '192.168.1.18']
+ALLOWED_HOSTS = ['.vercel.app', 'matrixoperationsapi-production.up.railway.app', '127.0.0.1', '192.168.1.18']
 
 # Application definition
 INSTALLED_APPS = [
@@ -94,7 +94,7 @@ WSGI_APPLICATION = 'matrix.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'ENGINE': 'django.db.backends.postgresql',
         'NAME': confi.get("DB_NAME"),
         'USER': confi.get("DB_USER"),
         'PASSWORD': confi.get("DB_PASSWORD"),
