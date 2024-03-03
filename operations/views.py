@@ -85,6 +85,8 @@ class MultiplyMatrixAPIView(APIView):
         m_first_matrix = int(request.data.get('m_first_matrix', 0))
         m_second_matrix = int(request.data.get('m_second_matrix', 0))
 
+        print(request.META.get('REMOTE_ADDR', "None"))
+
         if first_matrix_type is None or second_matrix_type is None:
             return Response({"message": "Types of matrix are missing!"}, status=status.HTTP_400_BAD_REQUEST)
 
