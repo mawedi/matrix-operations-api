@@ -29,7 +29,7 @@ SECRET_KEY = confi.get("SECRET_KEY")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = ['.vercel.app', 'matrixoperationsapi-production.up.railway.app', '127.0.0.1', '192.168.1.18']
+ALLOWED_HOSTS = ['*']
 
 # Application definition
 INSTALLED_APPS = [
@@ -78,14 +78,6 @@ TEMPLATES = [
 # CORS configuration
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_ALL_ORIGINS = True
-CORS_ALLOWED_ORIGINS = [
-    'http://localhost:3000',
-    'http://matrix-project.rf.gd'
-] 
-CORS_ALLOWED_ORIGIN_REGEXES = [
-    'http://localhost:3000',
-    'http://matrix-project.rf.gd'
-]
 
 WSGI_APPLICATION = 'matrix.wsgi.application'
 
@@ -94,12 +86,9 @@ WSGI_APPLICATION = 'matrix.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': confi.get("DB_NAME"),
-        'USER': confi.get("DB_USER"),
-        'PASSWORD': confi.get("DB_PASSWORD"),
-        'HOST': confi.get("DB_HOST"),
-        'OPTIONS': {'sslmode': 'require'},    }
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / "db.sqlite3",  # Path to the SQLite database file
+    }
 }
 
 

@@ -22,6 +22,4 @@ urlpatterns = [
     path('solve/<str:_id>/', RetrieveMatrixOperationAPIView.as_view(), name='retrieve-solving-result'),
     path('inverse/<str:_id>/', RetrieveMatrixInverseTransposeAPIView.as_view(), name='retrive-matrix-inverse'),
     path('transpose/<str:_id>/', RetrieveMatrixInverseTransposeAPIView.as_view(), name='retrive-matrix-transpose'),
-
-    path('send-email/', SendEmailAPIView.as_view(), name='send-email')
 ]
